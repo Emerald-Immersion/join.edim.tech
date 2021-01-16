@@ -38,12 +38,12 @@ self.addEventListener("fetch", function (event) {
 
 	var request = event.request;
 
-	var apiCache = event.request.url.match(/&callback=callback_([0-9]+)$/);
+	var apiCache = request.url.match(/&callback=callback_([0-9]+)$/);
 
 	if (apiCache) {
 		console.log('WORKER: fetch api callback detected, url callback cropped.');
 		request = new Request(request, {
-			url: url.substr(0, apiCache.index)
+			url: request.url.substr(0, apiCache.index)
 		});
 	}
 
