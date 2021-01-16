@@ -1,4 +1,4 @@
-var version = 'v3::';
+var version = 'v4::';
 
 self.addEventListener("install", function (event) {
 	console.log('WORKER: install event in progress.');
@@ -36,18 +36,20 @@ self.addEventListener("fetch", function (event) {
 		return;
 	}
 
-	var url = event.request.url;
+	var request = event.request;
 
 	var apiCache = event.request.url.match(/&callback=callback_([0-9]+)$/);
 
 	if (apiCache) {
 		console.log('WORKER: fetch api callback detected, url callback cropped.');
-		url = url.substr(0, apiCache.index);
+		request = new Request(request, {
+			url = url.substr(0, apiCache.index)
+		});
 	}
 
 	event.respondWith(
 		caches
-		.match(url)
+		.match(request)
 		.then(function (cached) {
 			var expired = false;
 
@@ -64,15 +66,16 @@ self.addEventListener("fetch", function (event) {
 				}
 
 				if (fetchDate < expireDate) {
-					console.log('WORKER: fetch cache hit', fetchDate, expireDate, url);
+					console.log('WORKER: fetch cache hit', fetchDate, expireDate, request.url);
 				} else {
-					console.log('WORKER: fetch cache expired', fetchDate, expireDate, url);
+					console.log('WORKER: fetch cache expired', fetchDate, expireDate, request.url);
 					expired = true;
 				}
 			} else {
-				console.log('WORKER: fetch cache miss', url);
+				console.log('WORKER: fetch cache miss', request.url);
 			}
 
+			// Always use original event.request for network
 			var networked = fetch(event.request)
 				.then(fetchedFromNetwork, unableToResolve)
 				.catch(unableToResolve);
@@ -85,9 +88,9 @@ self.addEventListener("fetch", function (event) {
 				caches
 					.open(version + 'pages')
 					.then(function add(cache) {
-						cache.put(url, cacheCopy);
+						cache.put(request, cacheCopy);
 					}).then(function () {
-						console.log('WORKER: fetch response stored in cache.', url);
+						console.log('WORKER: fetch response stored in cache.', request.url);
 					}).catch(function () {
 						console.log(err);
 					});
