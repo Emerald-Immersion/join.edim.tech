@@ -1,4 +1,4 @@
-var version = 'v5::';
+var version = 'v6::';
 
 self.addEventListener("install", function (event) {
 	console.log('WORKER: install event in progress.');
@@ -38,17 +38,10 @@ self.addEventListener("fetch", function (event) {
 
 	var request = event.request;
 
-	var apiCache = request.url.match(/&callback=callback_([0-9]+)$/);
+	var apiCache = request.url.match(/&callback=.*$/);
 
 	if (apiCache) {
-		console.log('WORKER: fetch api callback detected, url callback cropped.');
-		request = new Request(request.url.substr(0, apiCache.index), {
-			method: request.method,
-			headers: request.headers,
-			mode: 'same-origin',
-			credentials: request.credentials,
-			redirect: 'manual'
-		})
+		console.log('WORKER: fetch api callback detected.');
 	}
 
 	event.respondWith(

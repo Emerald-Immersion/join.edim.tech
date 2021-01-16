@@ -61,13 +61,13 @@
             <section>
                 <form id="memberlist" name="memberlist" onsubmit="return memberlistSubmit()">
                     <label><p>Planetside Outfit Lookup Tool</p><input type="text" name="outfitalias" id="outfitalias" pattern="[a-zA-Z0-9]+" minlength="1" maxlength="4" required value="EDIM" /></label>
-                    <button type="submit">Submit</button>
+                    <button id="memberlist-submit" type="submit" disabled>Submit</button>
                 </form>
             </section>
             <section>
                 <form id="userdetail" name="userdetail" onsubmit="return userdetailSubmit()">
                     <label><p>Planetside Player Lookup Tool</p><input type="text" name="username" id="username" pattern="[a-zA-Z0-9]+" minlength="3" maxlength="32" required /></label>
-                    <button type="submit">Submit</button>
+                    <button id="userdetail-submit" type="submit" disabled>Submit</button>
                 </form>
             </section>
         </section>

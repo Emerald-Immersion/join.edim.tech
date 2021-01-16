@@ -6,14 +6,19 @@ function $$(selectors) {
 	return document.querySelectorAll(selectors);
 }
 function $$$(url, callback, timeout = 15000) {
-	var callbackMethod = 'callback_' + Date.now();
+	var callbackMethod = 'callback';
 
-	var timeoutCallback = function () {
-		callback(null, new Error('Request Timeout'));
+	if (window[callbackMethod]) {
+		showWarning(null, 'There is currently a request in progress, please wait...')
+		return;
 	}
 
+	var timeoutHandle = setTimeout(function () {
+		callback(null, new Error('Request Timeout'));
+	}, timeout);
+
 	window[callbackMethod] = function (data) {
-		clearTimeout(timeoutCallback);
+		clearTimeout(timeoutHandle);
 		delete window[callbackMethod];
 		document.body.removeChild(script);
 		callback(data);
@@ -25,7 +30,6 @@ function $$$(url, callback, timeout = 15000) {
 	
 	try {
 		document.body.appendChild(script);
-		setTimeout(timeout, timeout);
 	} catch (err) {
 		callback(null, err);
 	}
@@ -105,6 +109,9 @@ function showWarning(err, msg) {
 	$('footer_warning').style.display = '';
 	$('footer_loading').style.display = 'none';
 	$('footer').style.display = '';
+	
+	$('memberlist-submit').disabled = false;
+	$('userdetail-submit').disabled = false;
 }
 /**
  * 
@@ -117,6 +124,22 @@ function showError(err) {
 	$('footer_error').style.display = '';
 
 	$('footer_error').scrollIntoView({ behavior: 'smooth' });
+	
+	$('memberlist-submit').disabled = false;
+	$('userdetail-submit').disabled = false;
+}
+/**
+ * 
+ */
+function showData() {
+	$('footer').style.display = '';
+	$('footer_warning').style.display = 'none';
+	$('footer_error').style.display = 'none';
+	$('footer_loading').style.display = 'none';
+	
+	$('memberlist-submit').disabled = false;
+	$('userdetail-submit').disabled = false;
+
 }
 /**
  * 
@@ -216,9 +239,11 @@ function loadPlanetside() {
 
 				$('TotalAxilPoints').innerText = current;
 				$('TotalAxilPoints').className = null;
-			} catch (e) {
-				console.log(e);
 				
+				$('memberlist-submit').disabled = false;
+				$('userdetail-submit').disabled = false;
+			} catch (e) {
+				showError(e);
 			}
 		})
 	
@@ -233,6 +258,9 @@ function memberlistSubmit() {
 		var outfitalias = $('outfitalias').value;
 		
 		var url = buildOutfitListApiUrl(outfitalias);
+
+		$('memberlist-submit').disabled = true;
+		$('userdetail-submit').disabled = true;
 
 		$('footer_loading').style.display = '';
 		$('footer_warning').style.display = 'none';
@@ -262,6 +290,9 @@ function userdetailSubmit() {
 		var username = $('username').value;
 
 		var url = buildUserApiUrl(username);
+
+		$('memberlist-submit').disabled = true;
+		$('userdetail-submit').disabled = true;
 
 		$('footer_loading').style.display = '';
 		$('footer_warning').style.display = 'none';
@@ -580,7 +611,7 @@ function renderMemberList(data, err) {
 		sort($('membersort2'));
 		
 		$('memberlist_results').style.display = '';
-		$('footer_loading').style.display = 'none';
+		showData();
 
 		if ($('userdetail_results').style.display != 'none' || screen.width <= 600) {
 			$('memberlist_results').scrollIntoView({ behavior: 'smooth' });
@@ -606,7 +637,7 @@ function formatTimeFromMins(mins) {
 			if (m < 7) { s = 'Days'; }
 			else {
 				m /= 7;
-				if (m < 4) { s = 'Weeks'; }
+				if (m < 4.345) { s = 'Weeks'; }
 				else {
 					m /= 4.345;
 					if (m < 12) { s = 'Months'; }
@@ -660,9 +691,8 @@ function renderUserDetail(data, err) {
 			$('userdetail-online').className = 'good';
 		} else {
 			$('userdetail-online').innerText = 'No';
-			$('userdetail-online').className = 'bad';
+			$('userdetail-online').className = null;
 		}
-		
 
 		var items = character.items;
 
@@ -733,8 +763,8 @@ function renderUserDetail(data, err) {
 			}
 		}
 		
-		$('footer_loading').style.display = 'none';
 		$('userdetail_results').style.display = '';
+		showData();
 		
 		if (screen.width <= 600) {
 			$('userdetail_results').scrollIntoView({ behavior: 'smooth' });
