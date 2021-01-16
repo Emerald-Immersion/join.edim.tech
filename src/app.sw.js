@@ -1,4 +1,4 @@
-var version = 'v4::';
+var version = 'v5::';
 
 self.addEventListener("install", function (event) {
 	console.log('WORKER: install event in progress.');
@@ -42,9 +42,13 @@ self.addEventListener("fetch", function (event) {
 
 	if (apiCache) {
 		console.log('WORKER: fetch api callback detected, url callback cropped.');
-		request = new Request(request, {
-			url: request.url.substr(0, apiCache.index)
-		});
+		request = new Request(request.url.substr(0, apiCache.index), {
+			method: request.method,
+			headers: request.headers,
+			mode: 'same-origin',
+			credentials: request.credentials,
+			redirect: 'manual'
+		})
 	}
 
 	event.respondWith(
