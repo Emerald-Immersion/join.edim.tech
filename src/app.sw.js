@@ -50,23 +50,27 @@ self.addEventListener("fetch", function (event) {
 		.then(function (cached) {
 			var expired = false;
 
-			if (cached && cached.headers.has('Date')) {
-				var fetchDate = new Date(cached.headers.get('Date')).getDate();
-				var expireDate = Date.now();
+			if (cached) {
+				if (cached.headers.has('Date')) {
+					var fetchDate = new Date(cached.headers.get('Date')).getDate();
+					var expireDate = Date.now();
 
-				if (apiCache) {
-					expireDate -= (1*60000);
-				} else if (cached.headers.has('Expires')) {
-					expireDate = new Date(cached.headers.get('Expires')).getDate();
-				} else {
-					expireDate -= (5*60000);
-				}
+					if (apiCache) {
+						expireDate -= (1*60000); // 1 min
+					} else if (cached.headers.has('Expires')) {
+						expireDate = new Date(cached.headers.get('Expires')).getDate();
+					} else {
+						expireDate -= (5*60000); // 5 mins
+					}
 
-				if (fetchDate < expireDate) {
-					console.log('WORKER: fetch cache hit', fetchDate, expireDate, request.url);
+					if (fetchDate < expireDate) {
+						console.log('WORKER: fetch cache hit', fetchDate, expireDate, request.url);
+					} else {
+						console.log('WORKER: fetch cache expired', fetchDate, expireDate, request.url);
+						expired = true;
+					}
 				} else {
-					console.log('WORKER: fetch cache expired', fetchDate, expireDate, request.url);
-					expired = true;
+					console.log('WORKER: fetch cache no date', request.url);
 				}
 			} else {
 				console.log('WORKER: fetch cache miss', request.url);

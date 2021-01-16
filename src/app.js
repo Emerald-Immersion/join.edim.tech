@@ -8,30 +8,63 @@ function $$(selectors) {
 function $$$(url, callback, timeout = 15000) {
 	var callbackMethod = 'callback';
 
-	if (window[callbackMethod]) {
-		showWarning(null, 'There is currently a request in progress, please wait...')
-		return;
-	}
+	var callbackUrl = url + callbackMethod;
 
-	var timeoutHandle = setTimeout(function () {
-		callback(null, new Error('Request Timeout'));
-	}, timeout);
-
-	window[callbackMethod] = function (data) {
-		clearTimeout(timeoutHandle);
-		delete window[callbackMethod];
-		document.body.removeChild(script);
-		callback(data);
-	}
-
-	var script = document.createElement('script');
-
-	script.src = url + callbackMethod;
+	if (navigator.onLine) {
+		if (window[callbackMethod]) {
+			showWarning(null, 'There is currently a request in progress, please wait...')
+			return;
+		}
 	
-	try {
-		document.body.appendChild(script);
-	} catch (err) {
-		callback(null, err);
+		var timeoutHandle = setTimeout(function () {
+			callback(null, new Error('Request Timeout'));
+		}, timeout);
+	
+		window[callbackMethod] = function (data) {
+			clearTimeout(timeoutHandle);
+			delete window[callbackMethod];
+			document.body.removeChild(script);
+			callback(data);
+		}
+	
+		var script = document.createElement('script');
+
+		script.src = callbackUrl;
+		
+		try {
+			document.body.appendChild(script);
+		} catch (err) {
+			callback(null, err);
+		}
+	} else {
+		fetch(new Request(callbackUrl, {
+			bodyUsed: false,
+			cache: "default",
+			credentials: "include",
+			integrity: "",
+			isHistoryNavigation: false,
+			keepalive: false,
+			method: "GET",
+			mode: "no-cors",
+			redirect: "follow",
+			referrer: "https://join.edim.tech/",
+			referrerPolicy: "strict-origin-when-cross-origin"
+		})).then((res) => {
+			res.text().then((value) => {
+				var offset = value.indexOf('{');
+				
+				var json = value.substr(offset, value.length - offset - 1);
+
+				var data = JSON.parse(json);
+
+				callback(data);
+			}).catch((err) => {
+				callback(null, err);
+			})
+		})
+		.catch((err) => {
+			callback(null, err);
+		})
 	}
 }
 /**
@@ -53,6 +86,9 @@ function app() {
 	} else {
 		console.log('CLIENT: service worker is not supported.');
 	}
+
+	window.addEventListener('online', changeOnlineStatus);
+	window.addEventListener('offline', changeOnlineStatus);
 }
 /**
  * 
@@ -90,7 +126,7 @@ function buildOutfitListApiUrl(outfit) {
  * 
  */
 function buildUserApiUrl(username) {
-	return buildPlanetsideApiUrl(`character/?name.first_lower=${username.toLowerCase().trim()}&c:resolve=item_full(name.en,description.en)`);
+	return buildPlanetsideApiUrl(`character/?name.first_lower=${username.toLowerCase().trim()}&c:resolve=item`);
 }
 /**
  * @description
@@ -98,6 +134,17 @@ function buildUserApiUrl(username) {
  */
 function buildUserDeathsApiUrl(userid) {
 	return buildPlanetsideApiUrl(`characters_event_grouped/?character_id=${userid}&type=DEATH&c:tree=characters_event_grouped_list^character_id`);
+}
+/** */
+function changeOnlineStatus() {
+	if (navigator.onLine) {
+		$('footer').style.display = '';
+		$('footer_loading').style.display = '';
+		$('footer_loading_message').style.display = 'none';
+		$('footer_loading_message').innerText = 'You apppear to be offline, tools will only display cached content.';
+	} else {
+		$('footer_loading_message').style.display = '';
+	}
 }
 /**
  * 
@@ -694,72 +741,67 @@ function renderUserDetail(data, err) {
 			$('userdetail-online').className = null;
 		}
 
-		var items = character.items;
+		var items = character.items.reduce((p,c) => {
+			var id = Number(c.item_id); delete c.item_id;
+			p[id] = c;
+			return p;
+		}, {});
 
 		$('userdetail_loadout').innerHTML = '';
 
-		for (var rank in config.ranks)
-		{
+		for (var rankName in config.ranks) {
+			var rank = config.ranks[rankName];
+
 			var contain = document.createElement("div");
 			$('userdetail_loadout').appendChild(contain);
 
 			var h3 = document.createElement("h3");
-			h3.innerText = rank;
+			h3.innerText = rankName;
 			contain.appendChild(h3);
 
-			var ul;
-			var section;
+			for (var groupName in rank) {
+				var h4 = document.createElement("h4");
+				h4.innerText = groupName;
+				contain.appendChild(h4);
+				
+				var ul = document.createElement("ul");
+				contain.appendChild(ul);
 
-			for (var index in config.ranks[rank])
-			{
-				var skill = config.ranks[rank][index];
+				for (var item of rank[groupName]) {
+					var li = document.createElement("li");
 
-				if (skill.section != section)
-				{
-					section = skill.section;
-
-					var h4 = document.createElement("h4");
-					h4.innerText = section;
-					contain.appendChild(h4);
+					li.innerText = item.name;
+					li.title = item.id
 					
-					ul = document.createElement("ul");
-					contain.appendChild(ul);
-				}
+					var hasSkill = false;
 
-				var li = document.createElement("li");
-
-				var hasSkill = false;
-
-				for (var i = 0; i < items.length; i++)
-				{
-					if (skill.id && skill.id > 0)
-					{
-						if (items[i].item_id == skill.id)
-						{
-							hasSkill = true;
-							break;
+					if (Array.isArray(item.id)) {
+						for (var id of item.id) {
+							if (items[id]) {
+								hasSkill = true;
+								break;
+							}
+						}
+					} else {
+						if (items[item.id]) {
+							if (item.stack_count) {
+								if (item.stack_count == items[item.id].stack_count) {
+									hasSkill = true;
+								}
+							} else {
+								hasSkill = true;
+							}
 						}
 					}
-					else if (items[i] && items[i].name)
-					{
-						if (items[i].name.en == skill.name)
-						{
-							hasSkill = true;
-							break;
-						}
+
+					if (hasSkill) {
+						li.className = 'good';
+					} else {
+						li.className = 'bad';
 					}
+
+					ul.appendChild(li);
 				}
-
-				li.innerText = skill.name;
-				li.title = skill.id;
-
-				if (hasSkill) {
-					li.className = 'good';
-				} else {
-					li.className = 'bad';
-				}
-
-				ul.appendChild(li);
 			}
 		}
 		
