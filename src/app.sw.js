@@ -1,4 +1,4 @@
-var version = 'v2::';
+var version = 'v3::';
 
 self.addEventListener("install", function (event) {
 	console.log('WORKER: install event in progress.');
@@ -36,16 +36,18 @@ self.addEventListener("fetch", function (event) {
 		return;
 	}
 
+	var url = event.request.url;
+
 	var apiCache = event.request.url.match(/&callback=callback_([0-9]+)$/);
 
 	if (apiCache) {
-		console.log('WORKER: fetch api callback detected, url callback uncropped.');
-		event.request.url = event.request.url.substr(0, event.request.url.length - apiCache[0].length);
+		console.log('WORKER: fetch api callback detected, url callback cropped.');
+		url = url.substr(0, apiCache.index);
 	}
 
 	event.respondWith(
 		caches
-		.match(event.request)
+		.match(url)
 		.then(function (cached) {
 			var expired = false;
 
@@ -62,18 +64,13 @@ self.addEventListener("fetch", function (event) {
 				}
 
 				if (fetchDate < expireDate) {
-					console.log('WORKER: fetch cache hit', fetchDate, expireDate, event.request.url);
+					console.log('WORKER: fetch cache hit', fetchDate, expireDate, url);
 				} else {
-					console.log('WORKER: fetch cache expired', fetchDate, expireDate, event.request.url);
+					console.log('WORKER: fetch cache expired', fetchDate, expireDate, url);
 					expired = true;
 				}
 			} else {
-				console.log('WORKER: fetch cache miss', event.request.url);
-			}
-
-			if (apiCache) {
-				console.log('WORKER: fetch request, api request url callback uncropped.');
-				event.request.url += apiCache[0];
+				console.log('WORKER: fetch cache miss', url);
 			}
 
 			var networked = fetch(event.request)
@@ -85,19 +82,12 @@ self.addEventListener("fetch", function (event) {
 			function fetchedFromNetwork(response) {
 				var cacheCopy = response.clone();
 
-				if (apiCache) {
-					console.log('WORKER: fetch response, api request url callback cropped again.');
-					event.request.url = event.request.url.substr(0, event.request.url.length - apiCache[0].length);
-				} else {
-					console.log('WORKER: fetch response.', event.request.url);
-				}
-
 				caches
 					.open(version + 'pages')
 					.then(function add(cache) {
-						cache.put(event.request, cacheCopy);
+						cache.put(url, cacheCopy);
 					}).then(function () {
-						console.log('WORKER: fetch response stored in cache.', event.request.url);
+						console.log('WORKER: fetch response stored in cache.', url);
 					}).catch(function () {
 						console.log(err);
 					});
