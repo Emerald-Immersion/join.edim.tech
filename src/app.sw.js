@@ -39,7 +39,8 @@ self.addEventListener("fetch", function (event) {
 	var apiCache = event.request.url.match(/&callback=callback_([0-9]+)$/);
 
 	if (apiCache) {
-		console.log('WORKER: fetch api callback detected.');
+		console.log('WORKER: fetch api callback detected, url callback uncropped.');
+		event.request.url = event.request.url.substr(0, event.request.url.length - apiCache[0].length);
 	}
 
 	event.respondWith(
@@ -61,13 +62,18 @@ self.addEventListener("fetch", function (event) {
 				}
 
 				if (fetchDate < expireDate) {
-					console.log('WORKER: fetch cache hit', d, event.request.url);
+					console.log('WORKER: fetch cache hit', fetchDate, expireDate, event.request.url);
 				} else {
-					console.log('WORKER: fetch cache expired', d, event.request.url);
+					console.log('WORKER: fetch cache expired', fetchDate, expireDate, event.request.url);
 					expired = true;
 				}
 			} else {
-				console.log('WORKER: fetch cache miss', d, event.request.url);
+				console.log('WORKER: fetch cache miss', event.request.url);
+			}
+
+			if (apiCache) {
+				console.log('WORKER: fetch request, api request url callback uncropped.');
+				event.request.url += apiCache[0];
 			}
 
 			var networked = fetch(event.request)
@@ -80,8 +86,7 @@ self.addEventListener("fetch", function (event) {
 				var cacheCopy = response.clone();
 
 				if (apiCache) {
-					console.log('WORKER: fetch response, api request url callback cropped.');
-
+					console.log('WORKER: fetch response, api request url callback cropped again.');
 					event.request.url = event.request.url.substr(0, event.request.url.length - apiCache[0].length);
 				} else {
 					console.log('WORKER: fetch response.', event.request.url);
