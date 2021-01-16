@@ -93,6 +93,7 @@ button:hover {
 
 /* Fix webkit autocomplete render bug */
 input:-webkit-autofill {
+    box-shadow: 0 0 0 50px #1c262f inset;
     -webkit-box-shadow: 0 0 0 50px #1c262f inset;
     -webkit-text-fill-color: #e1edff;
 }

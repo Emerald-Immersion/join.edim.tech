@@ -14,4 +14,6 @@ fs.mkdir('src/modules', (err) => {
     if (err && err.code != 'EEXIST') throw err;
 
     fs.copyFile('./node_modules/particles.js/particles.js', 'src/modules/particles.js', copyFileCallback);
+
+    fs.writeFile('src/CNAME', 'join.edim.tech', copyFileCallback);
 })
