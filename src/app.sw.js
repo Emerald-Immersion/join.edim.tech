@@ -43,7 +43,7 @@ self.addEventListener("fetch", function (event) {
 	if (apiCache) {
 		console.log('WORKER: fetch api callback detected, url callback cropped.');
 		request = new Request(request, {
-			url = url.substr(0, apiCache.index)
+			url: url.substr(0, apiCache.index)
 		});
 	}
 
