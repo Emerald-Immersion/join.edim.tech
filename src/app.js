@@ -5,10 +5,15 @@ function $(id) {
 function $$(selectors) {
 	return document.querySelectorAll(selectors);
 }
-function $$$(url, callback) {
-	var callbackMethod = 'callback_' + new Date().getTime();
+function $$$(url, callback, timeout = 15000) {
+	var callbackMethod = 'callback_' + Date.now();
+
+	var timeoutCallback = function () {
+		callback(null, new Error('Request Timeout'));
+	}
 
 	window[callbackMethod] = function (data) {
+		clearTimeout(timeoutCallback);
 		delete window[callbackMethod];
 		document.body.removeChild(script);
 		callback(data);
@@ -20,8 +25,9 @@ function $$$(url, callback) {
 	
 	try {
 		document.body.appendChild(script);
-	} catch {
-		
+		setTimeout(timeout, timeout);
+	} catch (err) {
+		callback(null, err);
 	}
 }
 /**
@@ -86,8 +92,31 @@ function buildUserApiUrl(username) {
  * @description
  * @param {*} userid 5428059164954198113
  */
-function buildUserDeaths(userid) {
+function buildUserDeathsApiUrl(userid) {
 	return buildPlanetsideApiUrl(`characters_event_grouped/?character_id=${userid}&type=DEATH&c:tree=characters_event_grouped_list^character_id`);
+}
+/**
+ * 
+ */
+function showWarning(err, msg) {
+	console.log(err);
+
+	$('footer_warning_message').innerText = msg || 'There was a problem talking to the API, this could be either your connection, browser, or just DayBreak themselves.';
+	$('footer_warning').style.display = '';
+	$('footer_loading').style.display = 'none';
+	$('footer').style.display = '';
+}
+/**
+ * 
+ */
+function showError(err) {
+	$('footer_error_message').innerText = err.message;
+	$('footer_error_details').innerText = err.name + "\n" + new Date().toISOString() + "\n" + err.stack;
+
+	$('footer_loading').style.display = 'none';
+	$('footer_error').style.display = '';
+
+	$('footer_error').scrollIntoView({ behavior: 'smooth' });
 }
 /**
  * 
@@ -128,13 +157,12 @@ function loadPlanetside() {
 	result.classList.remove('error');
 	result.classList.add('loading');
 	
-	$$$(url, function (data) {
-		if (!data || !data.outfit_list || data.outfit_list.length == 0) {
-			result.classList.add('error');
-			result.classList.remove('loading');
+	$$$(url, function (data, err) {
+		if (err || !data || !data.outfit_list || !data.outfit_list.length || data.outfit_list.length == 0) {
+			showWarning(err);
 			return;
 		}
-			
+		
 		var now = Date.now();
 		
 		setTimeout(tidyMemberListCache, (5*60000));
@@ -163,20 +191,35 @@ function loadPlanetside() {
 
 		var thatGuy = '5428059164954198113';
 		
-		var nextUrl = buildUserDeaths(thatGuy);
+		var nextUrl = buildUserDeathsApiUrl(thatGuy);
 
-		$$$(nextUrl, function (data) {
-			axilPointCache = data.characters_event_grouped_list[0];
+		$$$(nextUrl, function (data, err) {
+			if (err) {
+				showWarning(err);
+				return;
+			}
 
-			axilPointCache[thatGuy].count = 0;
-			axilPointCache[thatGuy].count = Object.values(axilPointCache).map((c) => Number(c.count)).reduce((a,c)=>{ if (c > a) { return c } else { return a } });
-			axilPointCache[thatGuy].count += 1;
+			if (!data || !data.characters_event_grouped_list || !data.characters_event_grouped_list.length || data.characters_event_grouped_list.length != 1) {
+				showWarning(data, 'Either the subject of Axil Points has been deleted (small mercy), or there was an error.');
+				return;
+			}
 
-			// var total = Object.values(axilPointCache).map((c) => Number(c.count)).reduce((a,c)=>a+c);
-			var current = calcAxilPoints(outfit_list.members.map(a => a.character_id));
+			try {
+				axilPointCache = data.characters_event_grouped_list[0];
 
-			$('TotalAxilPoints').innerText = current;
-			$('TotalAxilPoints').className = null;
+				axilPointCache[thatGuy].count = 0;
+				axilPointCache[thatGuy].count = Object.values(axilPointCache).map((c) => Number(c.count)).reduce((a,c)=>{ if (c > a) { return c } else { return a } });
+				axilPointCache[thatGuy].count += 1;
+
+				// var total = Object.values(axilPointCache).map((c) => Number(c.count)).reduce((a,c)=>a+c);
+				var current = calcAxilPoints(outfit_list.members.map(a => a.character_id));
+
+				$('TotalAxilPoints').innerText = current;
+				$('TotalAxilPoints').className = null;
+			} catch (e) {
+				console.log(e);
+				
+			}
 		})
 	
 		result.classList.remove('loading');
@@ -191,10 +234,12 @@ function memberlistSubmit() {
 		
 		var url = buildOutfitListApiUrl(outfitalias);
 
-		$('footer').style.display = '';
+		$('footer_loading').style.display = '';
+		$('footer_warning').style.display = 'none';
+		$('footer_error').style.display = 'none';
 		$('memberlist_results').style.display = 'none';
 		// $('userdetail_results').style.display = 'none';
-		$('footer_loading').style.display = '';
+		$('footer').style.display = '';
 
 		var fiveMinsAgo = Date.now() - (5*60000);
 
@@ -218,9 +263,11 @@ function userdetailSubmit() {
 
 		var url = buildUserApiUrl(username);
 
+		$('footer_loading').style.display = '';
+		$('footer_warning').style.display = 'none';
+		$('footer_error').style.display = 'none';
 		$('userdetail_results').style.display = 'none';
 		// $('memberlist_results').style.display = 'none';
-		$('footer_loading').style.display = '';
 		$('footer').style.display = '';
 
 		$$$(url, renderUserDetail);
@@ -388,157 +435,158 @@ function sumMemberRanks(ranks) {
  * 
  * @param {*} data 
  */
-function renderMemberList(data) {
-	var memberResults = $('member-tbody');
-	
-	// TODO: Use existing rows
-	memberResults.innerHTML = '';
+function renderMemberList(data, err) {
+	try {
+		if (err) {
+			showWarning(err);
+			return
+		}
 
-	if (data.outfit_list.length == 0) {
-		var h2 = document.createElement("h2");
-		h2.innerText = "Outfit not found";
-		result.appendChild(h2);
+		if (!data || !data.outfit_list || data.outfit_list.length == 0) {
+			showWarning(data, 'Outfit not found');
+			return;
+		}
 
-		$('footer_loading').style.display = 'none';
-		$('memberlist_results').style.display = '';
+		var now = Date.now();
 		
-		return;
-	}
+		var lastHour = now - (60*60000);
 
-	var now = Date.now();
+		setTimeout(tidyMemberListCache, (5*60000));
+
+		var outfit_list = data.outfit_list[0];
+		
+		memberListCache[outfit_list['alias_lower']] = {
+			updated: now,
+			data: data
+		}
+		memberListActive = outfit_list['alias_lower'];
 	
-	var lastHour = now - (60*60000);
+		$('outfit-name').innerText = outfit_list['name'];
+		$('outfit-created').innerText = outfit_list['time_created_date'];
+		$('outfit-members').innerText = outfit_list['member_count'];
+		
+		var ranks = calcMemberRanks(data);
+		
+		var rankResults = $('rank-tbody');
+		rankResults.innerHTML = '';
 
-	setTimeout(tidyMemberListCache, (5*60000));
+		for (var r in ranks) {
+			var rank = ranks[r];
 
-	var outfit_list = data.outfit_list[0];
-	
-	memberListCache[outfit_list['alias_lower']] = {
-		updated: now,
-		data: data
-	}
-	memberListActive = outfit_list['alias_lower'];
- 
-	$('outfit-name').innerText = outfit_list['name'];
-	$('outfit-created').innerText = outfit_list['time_created_date'];
-	$('outfit-members').innerText = outfit_list['member_count'];
-	
-	var ranks = calcMemberRanks(data);
-	
-	var rankResults = $('rank-tbody');
-	rankResults.innerHTML = '';
+			var tr = document.createElement('tr');
 
-	for (var r in ranks) {
-		var rank = ranks[r];
-
-		var tr = document.createElement('tr');
-
-		var td = document.createElement('td');
-		td.innerText = r;
-		td.dataset.value = rank['ordinal'];
-		tr.appendChild(td);
-
-		for (var i in rank) {
-			if (i == 'ordinal') { continue }
-			td = document.createElement('td');
-			td.innerText = rank[i];
+			var td = document.createElement('td');
+			td.innerText = r;
+			td.dataset.value = rank['ordinal'];
 			tr.appendChild(td);
+
+			for (var i in rank) {
+				if (i == 'ordinal') { continue }
+				td = document.createElement('td');
+				td.innerText = rank[i];
+				tr.appendChild(td);
+			}
+			
+			rankResults.appendChild(tr);
 		}
+
+		var rankSums = sumMemberRanks(ranks);
+
+		$('outfit-active-now').innerText = rankSums.total['activeNow'];
+		$('outfit-active-today').innerText = rankSums.total['activeToday'];
+		$('outfit-active-week').innerText = rankSums.total['activeWeek'];
+		$('outfit-active-month').innerText = rankSums.total['activeMonth'];
+		$('outfit-total-battlerank').innerText = rankSums.total['totalBattleRank'];
+		$('outfit-total-prestige').innerText = rankSums.total['totalPrestige'];
+		$('outfit-average-prestige').innerText = rankSums.average['totalPrestige'];
+		$('outfit-average-battlerank').innerText = rankSums.average['totalBattleRank'];
+
+		if (axilPointCache) {
+			$('outfit-axilpoints').innerText = calcAxilPoints(outfit_list.members.map(a => a.character_id));
+		}
+
+		var memberResults = $('member-tbody');
 		
-		rankResults.appendChild(tr);
-	}
+		// TODO: Use existing rows
+		memberResults.innerHTML = '';
 
-	var rankSums = sumMemberRanks(ranks);
-
-	$('outfit-active-now').innerText = rankSums.total['activeNow'];
-	$('outfit-active-today').innerText = rankSums.total['activeToday'];
-	$('outfit-active-week').innerText = rankSums.total['activeWeek'];
-	$('outfit-active-month').innerText = rankSums.total['activeMonth'];
-	$('outfit-total-battlerank').innerText = rankSums.total['totalBattleRank'];
-	$('outfit-total-prestige').innerText = rankSums.total['totalPrestige'];
-	$('outfit-average-prestige').innerText = rankSums.average['totalPrestige'];
-	$('outfit-average-battlerank').innerText = rankSums.average['totalBattleRank'];
-
-	if (axilPointCache) {
-		$('outfit-axilpoints').innerText = calcAxilPoints(outfit_list.members.map(a => a.character_id));
-	}
-
-	for (var i = 0; i < outfit_list.members.length; i++)
-	{
-		var member = outfit_list.members[i];
-
-		var tr = document.createElement('tr');
-
-		var lastActiveTime = new Date(0);
-
-		if (member.times) {
-			var lastActiveTimeUnixTimestamp = Math.max(member.times['last_login'], member.times['last_save']);
-			lastActiveTime = new Date(lastActiveTimeUnixTimestamp*1000);
-		}
-
-		if (member.online_status && member.online_status > 0) {
-			tr.classList.add('good');
-			lastActiveTime = new Date();
-		} else if (lastActiveTime > lastHour) {
-			tr.classList.add('avg');
-		}
-
-		var td = document.createElement('td');
-		if (member.name) td.innerText = member.name.first;
-		td.onclick = pickOutfitMember;
-		tr.appendChild(td);
-
-		td = document.createElement('td');
-		if (member.battle_rank && member.battle_rank.value && member.prestige_level)
+		for (var i = 0; i < outfit_list.members.length; i++)
 		{
-			td.innerText = member.battle_rank.value + ' (' + member.prestige_level + ')';
-			td.dataset.value = Number(member.battle_rank.value) + (Number(member.prestige_level) * 1000);
+			var member = outfit_list.members[i];
+
+			var tr = document.createElement('tr');
+
+			var lastActiveTime = new Date(0);
+
+			if (member.times) {
+				var lastActiveTimeUnixTimestamp = Math.max(member.times['last_login'], member.times['last_save']);
+				lastActiveTime = new Date(lastActiveTimeUnixTimestamp*1000);
+			}
+
+			if (member.online_status && member.online_status > 0) {
+				tr.classList.add('good');
+				lastActiveTime = new Date();
+			} else if (lastActiveTime > lastHour) {
+				tr.classList.add('avg');
+			}
+
+			var td = document.createElement('td');
+			if (member.name) td.innerText = member.name.first;
+			td.onclick = pickOutfitMember;
+			tr.appendChild(td);
+
+			td = document.createElement('td');
+			if (member.battle_rank && member.battle_rank.value && member.prestige_level)
+			{
+				td.innerText = member.battle_rank.value + ' (' + member.prestige_level + ')';
+				td.dataset.value = Number(member.battle_rank.value) + (Number(member.prestige_level) * 1000);
+			}
+			tr.appendChild(td);
+
+			td = document.createElement('td');
+			if (member.rank)
+			{
+				td.innerText = member.rank;
+				td.dataset.value = member.rank_ordinal;
+			}
+			tr.appendChild(td);
+
+			td = document.createElement('td');
+			td.innerText = calcAxilPoints([member.character_id]);
+			tr.appendChild(td);
+
+			td = document.createElement('td');
+			if (member.member_since_date) {
+				td.innerText = member.member_since_date.substring(0, 10);
+				td.dataset.tooltip = member.member_since_date;
+			}
+			tr.appendChild(td);
+
+			td = document.createElement('td');
+			
+			var str = lastActiveTime.toISOString()
+
+			td.innerText = str.substring(0, 10);
+			td.dataset.tooltip = str;
+
+			tr.appendChild(td);
+			
+			memberResults.appendChild(tr);
 		}
-		tr.appendChild(td);
 
-		td = document.createElement('td');
-		if (member.rank)
-		{
-			td.innerText = member.rank;
-			td.dataset.value = member.rank_ordinal;
-		}
-		tr.appendChild(td);
-
-		td = document.createElement('td');
-		td.innerText = calcAxilPoints([member.character_id]);
-		tr.appendChild(td);
-
-		td = document.createElement('td');
-		if (member.member_since_date) {
-			td.innerText = member.member_since_date.substring(0, 10);
-			td.dataset.tooltip = member.member_since_date;
-		}
-		tr.appendChild(td);
-
-		td = document.createElement('td');
+		sort($('ranksort0'));
 		
-		var str = lastActiveTime.toISOString()
-
-		td.innerText = str.substring(0, 10);
-		td.dataset.tooltip = str;
-
-		tr.appendChild(td);
+		sort($('membersort4'));
+		sort($('membersort2'));
 		
-		memberResults.appendChild(tr);
-	}
+		$('memberlist_results').style.display = '';
+		$('footer_loading').style.display = 'none';
 
-	sort($('ranksort0'));
-	
-	sort($('membersort4'));
-	sort($('membersort2'));
-	
-	$('footer_loading').style.display = 'none';
-	$('memberlist_results').style.display = '';
-
-	if ($('userdetail_results').style.display != 'none' || screen.width <= 600) {
-		$('memberlist_results').scrollIntoView({ 
-			behavior: 'smooth' 
-		});
+		if ($('userdetail_results').style.display != 'none' || screen.width <= 600) {
+			$('memberlist_results').scrollIntoView({ behavior: 'smooth' });
+		}
+	} catch (e) {
+		showError(e);
 	}
 }
 /**
@@ -584,109 +632,115 @@ function pickOutfitMember(e) {
 	return userdetailSubmit();
 }
 
-function renderUserDetail(data) {
-	if (data.character_list.length == 0) {
-		$('footer_loading').style.display = 'none';
-		$('error_results').style.display = '';
-		return;
-	}
-
-	var character = data.character_list[0];
-
-	$('userdetail-name').innerText = character.name.first;
-	$('userdetail-rank').innerText = character.battle_rank.value + '.' + character.battle_rank.percent_to_next;
-	$('userdetail-totaltime').innerText = formatTimeFromMins(character.times.minutes_played);
-	$('userdetail-creation').innerText = character.times.creation_date;
-	$('userdetail-lastlogon').innerText = character.times.last_login_date;
-	$('userdetail-lastsave').innerText = character.times.last_save_date;
-	$('userdetail-totalitems').innerText = character.items.length;
-	$('userdetail-axilpoints').innerText = calcAxilPoints([character.character_id]);
-
-	if (character.online_status > 0) {
-		$('userdetail-online').innerText = 'Yes';
-		$('userdetail-online').className = 'good';
-	} else {
-		$('userdetail-online').innerText = 'No';
-		$('userdetail-online').className = 'bad';
-	}
-	
-
-	var items = character.items;
-
-	$('userdetail_loadout').innerHTML = '';
-
-	for (var rank in config.ranks)
-	{
-		var contain = document.createElement("div");
-		$('userdetail_loadout').appendChild(contain);
-
-		var h3 = document.createElement("h3");
-		h3.innerText = rank;
-		contain.appendChild(h3);
-
-		var ul;
-		var section;
-
-		for (var index in config.ranks[rank])
-		{
-			var skill = config.ranks[rank][index];
-
-			if (skill.section != section)
-			{
-				section = skill.section;
-
-				var h4 = document.createElement("h4");
-				h4.innerText = section;
-				contain.appendChild(h4);
-				
-				ul = document.createElement("ul");
-				contain.appendChild(ul);
-			}
-
-			var li = document.createElement("li");
-
-			var hasSkill = false;
-
-			for (var i = 0; i < items.length; i++)
-			{
-				if (skill.id && skill.id > 0)
-				{
-					if (items[i].item_id == skill.id)
-					{
-						hasSkill = true;
-						break;
-					}
-				}
-				else if (items[i] && items[i].name)
-				{
-					if (items[i].name.en == skill.name)
-					{
-						hasSkill = true;
-						break;
-					}
-				}
-			}
-
-			li.innerText = skill.name;
-			li.title = skill.id;
-
-			if (hasSkill) {
-				li.className = 'good';
-			} else {
-				li.className = 'bad';
-			}
-
-			ul.appendChild(li);
+function renderUserDetail(data, err) {
+	try {
+		if (err) {
+			showWarning(err);
+			return
 		}
-	}
-	
-	$('footer_loading').style.display = 'none';
-	$('userdetail_results').style.display = '';
-	
-	if (screen.width <= 600) {
-		$('userdetail_results').scrollIntoView({ 
-			behavior: 'smooth' 
-		});
+
+		if (!data || !data.character_list || !data.character_list.length || data.character_list.length == 0) {
+			showWarning(data, 'Player not found');
+			return;
+		}
+
+		var character = data.character_list[0];
+
+		$('userdetail-name').innerText = character.name.first;
+		$('userdetail-rank').innerText = character.battle_rank.value + '.' + character.battle_rank.percent_to_next;
+		$('userdetail-totaltime').innerText = formatTimeFromMins(character.times.minutes_played);
+		$('userdetail-creation').innerText = character.times.creation_date;
+		$('userdetail-lastlogon').innerText = character.times.last_login_date;
+		$('userdetail-lastsave').innerText = character.times.last_save_date;
+		$('userdetail-totalitems').innerText = character.items.length;
+		$('userdetail-axilpoints').innerText = calcAxilPoints([character.character_id]);
+
+		if (character.online_status > 0) {
+			$('userdetail-online').innerText = 'Yes';
+			$('userdetail-online').className = 'good';
+		} else {
+			$('userdetail-online').innerText = 'No';
+			$('userdetail-online').className = 'bad';
+		}
+		
+
+		var items = character.items;
+
+		$('userdetail_loadout').innerHTML = '';
+
+		for (var rank in config.ranks)
+		{
+			var contain = document.createElement("div");
+			$('userdetail_loadout').appendChild(contain);
+
+			var h3 = document.createElement("h3");
+			h3.innerText = rank;
+			contain.appendChild(h3);
+
+			var ul;
+			var section;
+
+			for (var index in config.ranks[rank])
+			{
+				var skill = config.ranks[rank][index];
+
+				if (skill.section != section)
+				{
+					section = skill.section;
+
+					var h4 = document.createElement("h4");
+					h4.innerText = section;
+					contain.appendChild(h4);
+					
+					ul = document.createElement("ul");
+					contain.appendChild(ul);
+				}
+
+				var li = document.createElement("li");
+
+				var hasSkill = false;
+
+				for (var i = 0; i < items.length; i++)
+				{
+					if (skill.id && skill.id > 0)
+					{
+						if (items[i].item_id == skill.id)
+						{
+							hasSkill = true;
+							break;
+						}
+					}
+					else if (items[i] && items[i].name)
+					{
+						if (items[i].name.en == skill.name)
+						{
+							hasSkill = true;
+							break;
+						}
+					}
+				}
+
+				li.innerText = skill.name;
+				li.title = skill.id;
+
+				if (hasSkill) {
+					li.className = 'good';
+				} else {
+					li.className = 'bad';
+				}
+
+				ul.appendChild(li);
+			}
+		}
+		
+		$('footer_loading').style.display = 'none';
+		$('userdetail_results').style.display = '';
+		
+		if (screen.width <= 600) {
+			$('userdetail_results').scrollIntoView({ behavior: 'smooth' });
+		}
+	} catch (e) {
+		showError(e);
 	}
 }
 /**
