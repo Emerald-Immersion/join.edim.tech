@@ -31,6 +31,18 @@ function app() {
 	try { loadImages(); } catch (err) { console.log(err) }
 	try { loadParticles(); } catch (err) { console.log(err) }
 	try { loadPlanetside(); } catch (err) { console.log(err) }
+
+	if ('serviceWorker' in navigator) {
+		console.log('CLIENT: service worker registration in progress.');
+		navigator.serviceWorker.register('/app.sw.js').then(function() {
+			console.log('CLIENT: service worker registration complete.');
+		}, function(err) {
+			console.log('CLIENT: service worker registration failure.');
+			console.log(err);
+		});
+	} else {
+		console.log('CLIENT: service worker is not supported.');
+	}
 }
 /**
  * 
