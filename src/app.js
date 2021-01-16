@@ -71,10 +71,18 @@ function buildUserApiUrl(username) {
     return buildPlanetsideApiUrl(`character/?name.first_lower=${username.toLowerCase().trim()}&c:resolve=item_full(name.en,description.en)`);
 }
 /**
+ * @description
+ * @param {*} userid 5428059164954198113
+ */
+function buildUserDeaths(userid) {
+    return buildPlanetsideApiUrl(`characters_event_grouped/?character_id=${userid}&type=DEATH&c:tree=characters_event_grouped_list^character_id`);
+}
+/**
  * 
  */
 var memberListCache = {};
 var memberListActive = null;
+var axilPointCache = null;
 /**
  * 
  */
@@ -137,7 +145,24 @@ function loadPlanetside() {
 		$('TotalMembers').innerText = rankSums.total.members;
 		$('TotalPrestige').innerText = rankSums.total.totalPrestige;
 		$('TotalBattleRank').innerText = rankSums.total.totalBattleRank;
-		$('AvgBattleRank').innerText = rankSums.average.totalBattleRank;
+        $('AvgBattleRank').innerText = rankSums.average.totalBattleRank;
+        
+        $('TotalAxilPoints').className = 'loading';
+
+        var thatGuy = '5428059164954198113';
+        
+        var nextUrl = buildUserDeaths(thatGuy);
+
+	    $$$(nextUrl, function (data) {
+            axilPointCache = data.characters_event_grouped_list[0];
+
+            axilPointCache[thatGuy].count = 0;
+            axilPointCache[thatGuy].count = Object.values(axilPointCache).map((c) => Number(c.count) ).reduce((a,c)=>{ if (c > a) { return c } else { return a } });
+            axilPointCache[thatGuy].count += 1;
+
+            $('TotalAxilPoints').innerText = calcAxilPoints(outfit_list.members.map(a => a.character_id));;
+            $('TotalAxilPoints').className = null;
+        })
 	
 		result.classList.remove('loading');
 	});
@@ -190,7 +215,22 @@ function userdetailSubmit() {
 
     return false;
 }
+/**
+ * 
+ */
+function calcAxilPoints(members) {
+    var total = 0;
 
+    if (axilPointCache) {
+        for (var earner of members) {
+            if (axilPointCache[earner]) {
+                total += Number(axilPointCache[earner].count);
+            }
+        }
+    }
+
+    return total;
+}
 /**
  * 
  * @param {*} data 
@@ -251,7 +291,7 @@ function calcMemberRanks(data) {
             if (lastActiveTimeUnixTimestamp) {
                 var lastActiveTime = new Date(lastActiveTimeUnixTimestamp*1000);
 
-                if (lastActiveTime > lastHour) {
+                if (lastActiveTime > lastHour || member['online_status'] != 0) {
                     rank['activeNow']++;
                 }
 
@@ -334,7 +374,7 @@ function sumMemberRanks(ranks) {
  * @param {*} data 
  */
 function renderMemberList(data) {
-    var memberResults = $('member-results');
+    var memberResults = $('member-tbody');
     
     // TODO: Use existing rows
     memberResults.innerHTML = '';
@@ -370,7 +410,7 @@ function renderMemberList(data) {
     
     var ranks = calcMemberRanks(data);
     
-    var rankResults = $('rank-results');
+    var rankResults = $('rank-tbody');
     rankResults.innerHTML = '';
 
     for (var r in ranks) {
@@ -404,14 +444,28 @@ function renderMemberList(data) {
     $('outfit-average-prestige').innerText = rankSums.average['totalPrestige'];
     $('outfit-average-battlerank').innerText = rankSums.average['totalBattleRank'];
 
+    if (axilPointCache) {
+        $('outfit-axilpoints').innerText = calcAxilPoints(outfit_list.members.map(a => a.character_id));
+    }
+
     for (var i = 0; i < outfit_list.members.length; i++)
     {
         var member = outfit_list.members[i];
 
         var tr = document.createElement('tr');
 
-        if (member.times && member.times.last_save && (member.times.last_save*1000) > lastHour) {
+        var lastActiveTime = 0;
+
+        if (member.times) {
+            var lastActiveTimeUnixTimestamp = Math.max(member.times['last_login'], member.times['last_save']);
+            lastActiveTime = new Date(lastActiveTimeUnixTimestamp*1000);
+        }
+
+        if (member.online_status && member.online_status > 0) {
             tr.classList.add('good');
+            lastActiveTime = new Date();
+        } else if (lastActiveTime > lastHour) {
+            tr.classList.add('avg');
         }
 
         var td = document.createElement('td');
@@ -435,20 +489,32 @@ function renderMemberList(data) {
         tr.appendChild(td);
 
         td = document.createElement('td');
-        if (member.member_since_date) td.innerText = member.member_since_date.substring(0, 10);
+        td.innerText = calcAxilPoints([member.character_id]);
         tr.appendChild(td);
 
         td = document.createElement('td');
-        if (member.times && member.times.last_save_date) td.innerText = member.times.last_save_date.substring(0, 10);
+        if (member.member_since_date) {
+            td.innerText = member.member_since_date.substring(0, 10);
+            td.dataset.tooltip = member.member_since_date;
+        }
+        tr.appendChild(td);
+
+        td = document.createElement('td');
+        
+        var str = lastActiveTime.toISOString()
+
+        td.innerText = str.substring(0, 10);
+        td.dataset.tooltip = str;
+
         tr.appendChild(td);
         
         memberResults.appendChild(tr);
     }
 
-    sort($('ranksort1'), 1);
+    sort($('ranksort0'), 0);
     
-    sort($('membersort3'), 3);
-    sort($('membersort2'), 2);
+    sort($('membersort4'), 4, -1);
+    sort($('membersort2'), 2, -1);
     
     $('footer_loading').style.display = 'none';
     $('memberlist_results').style.display = '';
@@ -457,6 +523,22 @@ function renderMemberList(data) {
         $('memberlist_results').scrollIntoView({ 
             behavior: 'smooth' 
         });
+    }
+}
+
+function formatTimeFromMins(mins) {
+    if (mins < 60) {
+        return `${mins} Minutes`;
+    } else if (mins < 60*24) {
+        return `${Math.round((mins/(60))*100)/100} Hours`;
+    } else if (mins < 60*24*7) {
+        return `${Math.round((mins/(60*24))*100)/100}} Days`;
+    } else if (mins < 60*24*30) {
+        return `${Math.round((mins/(60*24*7))*100)/100} Weeks`;
+    } else if (mins < 60*24*365) {
+        return `${Math.round((mins/(60*24*7))*100)/100} Months`;
+    } else {
+        return `${Math.round((mins/(60*24*7*12))*100)/100} Years`;
     }
 }
 
@@ -471,10 +553,21 @@ function renderUserDetail(data) {
 
     $('userdetail-name').innerText = character.name.first;
     $('userdetail-rank').innerText = character.battle_rank.value + '.' + character.battle_rank.percent_to_next;
+    $('userdetail-totaltime').innerText = formatTimeFromMins(character.times.minutes_played);
     $('userdetail-creation').innerText = character.times.creation_date;
     $('userdetail-lastlogon').innerText = character.times.last_login_date;
     $('userdetail-lastsave').innerText = character.times.last_save_date;
     $('userdetail-totalitems').innerText = character.items.length;
+    $('userdetail-axilpoints').innerText = calcAxilPoints([character.character_id]);
+
+    if (character.online_status > 0) {
+        $('userdetail-online').innerText = 'Yes';
+        $('userdetail-online').className = 'good';
+    } else {
+        $('userdetail-online').innerText = 'No';
+        $('userdetail-online').className = 'bad';
+    }
+    
 
     var items = character.items;
 
@@ -554,10 +647,15 @@ function renderUserDetail(data) {
         });
     }
 }
+/**
+ * @description Sorts a HTML table tbody elements based on a column.
+ * @param {HTMLElement} e th or td element
+ * @param {bool} forceDirection 1 for ascending, -1 for descending (default)
+ */
+function sort(e, forceDirection) {
+    var col = Array.prototype.indexOf.call(e.parentNode.children, e);
 
-function sort(e, cell)
-{
-    var table = e.parentNode.parentNode.parentNode;
+    var table = e.parentElement.parentElement.parentElement;
 
     if (table.tagName != 'TABLE') {
         return;
@@ -569,25 +667,34 @@ function sort(e, cell)
         return;
     }
 
-    var direction = -1;
     var alreadySorted = false;
 
-    if (table.dataset.sorted == cell + '-') {
+    if (table.dataset.sorted == col + '-') {
+        alreadySorted = true;
         direction = 1;
-        table.dataset.sorted = cell + '+';
-        alreadySorted = true
+        table.dataset.sorted = col + '+';
+    } else if (table.dataset.sorted == col + '+') {
+        alreadySorted = true;
+        direction = -1;
+        table.dataset.sorted = col + '-';
     } else {
-        alreadySorted = (table.dataset.sorted == cell + '+');
-        table.dataset.sorted = cell + '-';
+        alreadySorted = false;
+        direction = forceDirection || -1;
+
+        if (direction == 1) {
+            table.dataset.sorted = col + '+';
+        } else {
+            table.dataset.sorted = col + '-';
+        }
     }
 
     var rows = tbody.getElementsByTagName('tr');
 
-    var numeric = !isNaN(rows[0].children[cell].innerText);
+    var numeric = !isNaN(rows[0].children[col].innerText);
 
     for (var i = 0; i < rows.length; i++) {
         var row = rows[i];
-        var rowCell = row.children[cell];
+        var rowCol = row.children[col];
         var last = row;
         
         if (alreadySorted) {
@@ -598,20 +705,20 @@ function sort(e, cell)
         } else {
             for (var c = i - 1; c >= 0; c--) {
                 var compare = rows[c];
-                var compareCell = compare.children[cell];
+                var compareCol = compare.children[col];
                 var ret = 0;
 
-                if (rowCell.dataset.value) {
-                    if (Number(rowCell.dataset.value) < Number(compareCell.dataset.value)) {
+                if (rowCol.dataset.value) {
+                    if (Number(rowCol.dataset.value) < Number(compareCol.dataset.value)) {
                         ret = direction;
                     }
                 } else {
                     if (numeric) {
-                        if (Number(rowCell.innerText) < Number(compareCell.innerText)) {
+                        if (Number(rowCol.innerText) < Number(compareCol.innerText)) {
                             ret = direction;
                         }
                     } else {
-                        ret = rowCell.innerText.localeCompare(compareCell.innerText);
+                        ret = rowCol.innerText.localeCompare(compareCol.innerText);
                     }
                 }
 

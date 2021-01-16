@@ -1,7 +1,8 @@
 /* Layout */
-html,body { 
-	width:100%;
-    height:100%;
+html,
+body {
+    width: 100%;
+    height: 100%;
     margin: 0;
     padding: 0;
 }
@@ -22,14 +23,17 @@ main > * {
     border-radius: 20px;
     text-align: center;
 }
+
 main > header {
     flex: 3 100%;
     margin: 50px;
 }
+
 main > footer {
     flex: 3 100%;
     margin: 50px;
 }
+
 main > section {
     min-width: 260px;
     max-width: 320px;
@@ -49,7 +53,8 @@ main > section {
         padding: 0;
         max-width: 0;
     }
-    section.split > section {
+
+    section.split>section {
         border: 1px solid #00A9A3;
         background: #1c262f;
         color: #90a3c0;
@@ -70,13 +75,19 @@ body {
     background: #1c262f;
     color: #90a3c0;
 }
-input, button {
+
+input,
+button {
     background-color: #1c262f !important;
     color: #e1edff;
     border: 2px solid #323f4e;
     padding: 10px;
 }
-input:hover, input:focus, a:hover .button, button:hover {
+
+input:hover,
+input:focus,
+a:hover .button,
+button:hover {
     border-color: #00A9A3;
 }
 
@@ -85,9 +96,10 @@ input:-webkit-autofill {
     -webkit-box-shadow: 0 0 0 50px #1c262f inset;
     -webkit-text-fill-color: #e1edff;
 }
+
 input:-webkit-autofill:focus {
     -webkit-text-fill-color: #e1edff;
-}  
+}
 
 .button {
     background-color: #1c262f;
@@ -101,7 +113,12 @@ input:-webkit-autofill:focus {
 .good {
     color: green;
 }
-.bad { 
+
+.avg {
+    color: gold;
+}
+
+.bad {
     color: red;
 }
 
@@ -110,15 +127,21 @@ a {
     text-decoration: none;
     color: inherit;
 }
+div > a {
+    display: inline-block;
+    text-decoration: underline;
+}
 
-ul { 
-    margin:0; 
-    padding: 0; 
+ul {
+    margin: 0;
+    padding: 0;
 
 }
+
 ul.float {
-    list-style: none outside none; 
+    list-style: none outside none;
 }
+
 ul li::before {
     display: inline-block;
     content: "\2022";
@@ -127,9 +150,11 @@ ul li::before {
     width: 1em;
     margin-left: -1em;
 }
+
 ul li {
     display: inline;
     margin: 0 10px;
+    white-space: nowrap;
 }
 
 table {
@@ -145,20 +170,30 @@ table tfoot {
     border-top: 1px solid #00A9A3;
 }
 
+.member-table td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 @media screen and (max-width: 600px) {
-    .rank-table th:nth-child(7), .rank-table td:nth-child(7) {
+
+    .rank-table th:nth-child(7),
+    .rank-table td:nth-child(7) {
         display: none;
     }
-    .rank-table th:nth-child(8), .rank-table td:nth-child(8) {
+
+    .rank-table th:nth-child(8),
+    .rank-table td:nth-child(8) {
         display: none;
     }
-    .rank-table th:nth-child(9), .rank-table td:nth-child(9) {
+
+    .rank-table th:nth-child(9),
+    .rank-table td:nth-child(9) {
         display: none;
     }
+
     .member-table td {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
         max-width: 50px;
     }
 }
@@ -175,6 +210,7 @@ table tfoot {
     flex-wrap: wrap;
     justify-content: space-between;
 }
+
 #userdetail_loadout div {
     background-color: #252F39;
     width: 350px;
@@ -187,26 +223,35 @@ table tfoot {
 .error div {
     text-decoration: line-through;
 }
-.loading span:before {
+
+.loading span::before, span.loading::before {
     animation: dots 3s linear infinite;
     content: "   ";
     min-width: 15px;
     display: inline-block;
 }
-#footer_loading span:before {
+
+#footer_loading span::before {
     font-size: xx-large;
 }
+
 @keyframes dots {
-    0%, 20% {
+
+    0%,
+    20% {
         content: ".  ";
     }
+
     40% {
         content: ".. ";
     }
+
     60% {
         content: "...";
     }
-    90%, 100% {
+
+    90%,
+    100% {
         content: "   ";
     }
 }
@@ -220,6 +265,136 @@ table tfoot {
     left: 0;
     z-index: -1;
 }
+
 #particles-js canvas {
     display: block;
+}
+
+/* Tooltip */
+[data-tooltip] {
+    cursor: pointer;
+    line-height: 1;
+}
+
+[data-tooltip]::after {
+    background-color: rgba(51, 51, 51, 0.9);
+    border-radius: 0.3rem;
+    color: #fff;
+    content: attr(data-tooltip);
+    font-size: 1rem;
+    font-size: 85%;
+    font-weight: normal;
+    line-height: 1.15rem;
+    opacity: 0;
+    padding: 0.25rem 0.5rem;
+    position: absolute;
+    text-align: center;
+    text-transform: none;
+    transition: opacity 0.2s;
+    visibility: hidden;
+    white-space: nowrap;
+    z-index: 1;
+}
+
+[data-tooltip].tooltip-top::before {
+    border-style: solid;
+    border-width: 0.3rem;
+    content: "";
+    opacity: 0;
+    position: absolute;
+    transition: opacity 0.2s;
+    visibility: hidden;
+    border-color: rgba(51, 51, 51, 0.9) transparent transparent transparent;
+    top: 0;
+    left: 50%;
+    margin-left: -0.3rem;
+}
+
+[data-tooltip].tooltip-top::after {
+    bottom: 100%;
+    left: 50%;
+    transform: translate(-50%);
+}
+
+[data-tooltip].tooltip-bottom::before {
+    border-style: solid;
+    border-width: 0.3rem;
+    content: "";
+    opacity: 0;
+    position: absolute;
+    transition: opacity 0.2s;
+    visibility: hidden;
+    border-color: transparent transparent rgba(51, 51, 51, 0.9) transparent;
+    bottom: 0;
+    left: 50%;
+    margin-left: -0.3rem;
+}
+
+[data-tooltip].tooltip-bottom::after {
+    top: 100%;
+    left: 50%;
+    transform: translate(-50%);
+}
+
+[data-tooltip].tooltip-left::before {
+    border-style: solid;
+    border-width: 0.3rem;
+    content: "";
+    opacity: 0;
+    position: absolute;
+    transition: opacity 0.2s;
+    visibility: hidden;
+    border-color: transparent transparent transparent rgba(51, 51, 51, 0.9);
+    top: 0.3rem;
+    right: calc(110% - 0.3rem);
+    margin-top: -0.3rem;
+}
+
+[data-tooltip].tooltip-left::after {
+    top: -0.3rem;
+    right: calc(110% + 0.3rem);
+}
+
+[data-tooltip].tooltip-right::before {
+    border-style: solid;
+    border-width: 0.3rem;
+    content: "";
+    opacity: 0;
+    position: absolute;
+    transition: opacity 0.2s;
+    visibility: hidden;
+    border-color: transparent rgba(51, 51, 51, 0.9) transparent transparent;
+    top: 50%;
+    top: 0.3rem;
+    left: calc(110% - 0.3rem);
+    margin-top: -0.3rem;
+}
+
+[data-tooltip].tooltip-right::after {
+    top: -0.3rem;
+    left: calc(110% + 0.3rem);
+}
+
+@media (max-width: 767px) {
+    [data-tooltip].tooltip-mobile::before {
+        display: none;
+    }
+
+    [data-tooltip].tooltip-mobile:after {
+        font-size: 1rem;
+        max-width: 20rem;
+        position: fixed;
+        bottom: auto;
+        top: 50%;
+        left: 50%;
+        text-align: left;
+        transform: translate(-50%);
+        white-space: normal;
+    }
+}
+
+[data-tooltip]:hover::after,
+[data-tooltip][class*=tooltip-]:hover::before {
+    visibility: visible;
+    opacity: 1;
 }

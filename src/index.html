@@ -26,8 +26,8 @@
             <img src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="media/planetside.png" width="200px" height="34px" alt="" />
             <br />
             <div id="planetside-result" class="loading">
+                <div><b>Online Members: <span id="ActiveMembersNow"></span></b></div>
                 <div>Active Leaders: <span id="ActiveLeaders"></span></div>
-                <div>Active Members Now: <span id="ActiveMembersNow"></span></div>
                 <div>Active Members Today: <span id="ActiveMembersToday"></span></div>
                 <div>Active Members this Week: <span id="ActiveMembersWeek"></span></div>
                 <div>Active Members this Month: <span id="ActiveMembersMonth"></span></div>
@@ -35,6 +35,7 @@
                 <div>Total Prestige: <span id="TotalPrestige"></span></div>
                 <div>Total BattleRank: <span id="TotalBattleRank"></span></div>
                 <div>Average BattleRank: <span id="AvgBattleRank"></span></div>
+                <div>Total AxilPoints: <span id="TotalAxilPoints"></span></div>
             </div>
         </section>
         <section>
@@ -49,7 +50,7 @@
         <section class="split">
             <section>
                 <form id="memberlist" name="memberlist" onsubmit="return memberlistSubmit()">
-                    <label><p>Planetside Outfit Lookup Tool</p><input type="text" name="outfitalias" id="outfitalias" pattern="[a-zA-Z0-9]+" minlength="1" maxlength="4" required /></label>
+                    <label><p>Planetside Outfit Lookup Tool</p><input type="text" name="outfitalias" id="outfitalias" pattern="[a-zA-Z0-9]+" minlength="1" maxlength="4" required value="EDIM" /></label>
                     <button type="submit">Submit</button>
                 </form>
             </section>
@@ -72,10 +73,13 @@
                 <ul class="float">
                     <li>Name: <span id="userdetail-name"></span></li>
                     <li>Rank: <span id="userdetail-rank"></span></li>
+                    <li>Total Time Played: <span id="userdetail-totaltime"></span></li>
+                    <li>Online: <span id="userdetail-online"></span></li>
                     <li>Creation: <span id="userdetail-creation"></span></li>
                     <li>Last Login: <span id="userdetail-lastlogon"></span></li>
                     <li>Last Save: <span id="userdetail-lastsave"></span></li>
                     <li>Total Items: <span id="userdetail-totalitems"></span></li>
+                    <li>Total AxilPoints: <span id="userdetail-axilpoints"></span></li>
                 </ul>
                 <h2>EDIM Loadout Check</h2>
                 <div id="userdetail_loadout"></div>
@@ -85,22 +89,23 @@
                 <ul class="float">
                     <li>Name: <span id="outfit-name"></span></li>
                     <li>Created: <span id="outfit-created"></span></li>
+                    <li>AxilPoints: <span id="outfit-axilpoints"></span></li>
                 </ul>
                 <h2>Ranks</h2>
                 <table class="rank-table">
                     <thead>
                         <tr>
-                            <th id="ranksort1" onclick="sort(this, 0)">Name</th>
-                            <th onclick="sort(this, 1)">Members</th>
-                            <th onclick="sort(this, 2)">Active Now</th>
-                            <th onclick="sort(this, 3)">Active Today</th>
-                            <th onclick="sort(this, 4)">Active Week</th>
-                            <th onclick="sort(this, 5)">Active Month</th>
-                            <th onclick="sort(this, 6)">Total Battle Rank</th>
-                            <th onclick="sort(this, 7)">Total Prestige</th>
+                            <th id="ranksort0" onclick="sort(this)">Name</th>
+                            <th onclick="sort(this)">Members</th>
+                            <th onclick="sort(this)">Active Now</th>
+                            <th onclick="sort(this)">Active Today</th>
+                            <th onclick="sort(this)">Active Week</th>
+                            <th onclick="sort(this)">Active Month</th>
+                            <th onclick="sort(this)">Total Battle Rank</th>
+                            <th onclick="sort(this)">Total Prestige</th>
                         </tr>
                     </thead>
-                    <tbody id="rank-results">
+                    <tbody id="rank-tbody">
         
                     </tbody>
                     <tfoot>
@@ -123,6 +128,7 @@
                             <th></th>
                             <th><span id="outfit-average-battlerank"></span></th>
                             <th><span id="outfit-average-prestige"></span></th>
+                            <th></th>
                         </tr>
                     </tfoot>
                 </table>
@@ -130,14 +136,15 @@
                 <table class="member-table">
                     <thead>
                         <tr>
-                            <th onclick="sort(this, 0)">Name</th>
-                            <th onclick="sort(this, 1)">Battle Rank (Prestige)</th>
-                            <th id="membersort2" onclick="sort(this, 2)">Outfit Rank</th>
-                            <th id="membersort3" onclick="sort(this, 3)">Member Since</th>
-                            <th onclick="sort(this, 4)">Last Online</th>
+                            <th onclick="sort(this)">Name</th>
+                            <th onclick="sort(this)">Battle Rank (Prestige)</th>
+                            <th id="membersort2" onclick="sort(this)">Outfit Rank</th>
+                            <th onclick="sort(this)">Axil Points</th>
+                            <th id="membersort4" onclick="sort(this)">Member Since</th>
+                            <th onclick="sort(this)">Last Online</th>
                         </tr>
                     </thead>
-                    <tbody id="member-results">
+                    <tbody id="member-tbody">
         
                     </tbody>
                 </table>
