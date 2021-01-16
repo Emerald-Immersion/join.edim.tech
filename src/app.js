@@ -38,17 +38,7 @@ function $$$(url, callback, timeout = 15000) {
 		}
 	} else {
 		fetch(new Request(callbackUrl, {
-			bodyUsed: false,
-			cache: "default",
-			credentials: "include",
-			integrity: "",
-			isHistoryNavigation: false,
-			keepalive: false,
-			method: "GET",
-			mode: "no-cors",
-			redirect: "follow",
-			referrer: "https://join.edim.tech/",
-			referrerPolicy: "strict-origin-when-cross-origin"
+			method: "GET"
 		})).then((res) => {
 			res.text().then((value) => {
 				var offset = value.indexOf('{');
@@ -771,7 +761,10 @@ function renderUserDetail(data, err) {
 					var li = document.createElement("li");
 
 					li.innerText = item.name;
-					li.title = item.id
+
+					if (item.tooltip) {
+						li.dataset.tooltip = item.tooltip;
+					}
 					
 					var hasSkill = false;
 
