@@ -71,12 +71,12 @@ self.addEventListener("fetch", function (event) {
 					}
 				} else {
 					console.log('WORKER: fetch cache no date', request.url);
+					expired = true;
 				}
 			} else {
 				console.log('WORKER: fetch cache miss', request.url);
 			}
 
-			// Always use original event.request for network
 			var networked = fetch(event.request)
 				.then(fetchedFromNetwork, unableToResolve)
 				.catch(unableToResolve);

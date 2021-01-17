@@ -11,53 +11,31 @@ function $$$(url, callback, timeout) {
 
 	var callbackUrl = url + callbackMethod;
 
-	var online = navigator.onLine;
+	if (window[callbackMethod]) {
+		showWarning(null, 'There is currently a request in progress, please wait...');
+		return;
+	}
 
-	if (online) {
-		if (window[callbackMethod]) {
-			showWarning(null, 'There is currently a request in progress, please wait...');
-			return;
-		}
+	var timeoutHandle = setTimeout(function () {
+		delete window[callbackMethod];
+		callback(null, new Error('Request Timeout'));
+	}, timeout || 15000);
+
+	window[callbackMethod] = function (data) {
+		clearTimeout(timeoutHandle);
+		delete window[callbackMethod];
+		document.body.removeChild(script);
+		callback(data);
+	}
+
+	var script = document.createElement('script');
+	script.src = callbackUrl;
 	
-		var timeoutHandle = setTimeout(function () {
-			callback(null, new Error('Request Timeout'));
-		}, timeout || 15000);
-	
-		window[callbackMethod] = function (data) {
-			clearTimeout(timeoutHandle);
-			delete window[callbackMethod];
-			document.body.removeChild(script);
-			callback(data);
-		}
-	
-		var script = document.createElement('script');
-
-		script.src = callbackUrl;
-		
-		try {
-			document.body.appendChild(script);
-		} catch (err) {
-			callback(null, err);
-		}
-	} else {
-		fetch(new Request(callbackUrl, {
-			method: "GET"
-		})).then((res) => {
-			res.text().then((value) => {
-				var offset = value.indexOf('{');
-				
-				var json = value.substr(offset, value.length - offset - 1);
-
-				var data = JSON.parse(json);
-
-				callback(data);
-			}).catch((err) => {
-				callback(null, err);
-			})
-		})
-		.catch((err) => {
-			callback(null, err);
-		})
+	try {
+		document.body.appendChild(script);
+	} catch (err) {
+		clearTimeout(timeoutHandle);
+		callback(null, err);
 	}
 }
 /**
@@ -133,12 +111,11 @@ function changeOnlineStatus() {
 	var online = navigator.onLine;
 
 	if (online) {
-		$('footer').style.display = '';
-		$('footer_loading').style.display = '';
-		$('footer_loading_message').style.display = 'none';
-		$('footer_loading_message').innerText = 'You apppear to be offline, tools will only display cached content.';
+		$('footer_information').style.display = 'none';
 	} else {
-		$('footer_loading_message').style.display = '';
+		$('footer').style.display = '';
+		$('footer_information').style.display = '';
+		$('footer_information').innerText = 'You apppear to be offline, tools will only display cached content if available.';
 	}
 }
 /**
@@ -197,10 +174,14 @@ function tidyMemberListCache () {
 
 	var fiveMinsAgo = now - (5*60000);
 
-	for (key in memberListCache) {
-		if (memberListCache[key] < fiveMinsAgo) {
-			delete memberListCache[key];
+	try {
+		for (key in memberListCache) {
+			if (memberListCache[key] < fiveMinsAgo) {
+				delete memberListCache[key];
+			}
 		}
+	} catch (err) {
+		console.log('Cache cleanup error', err);
 	}
 }
 /**
@@ -225,6 +206,8 @@ function loadPlanetside() {
 	$$$(url, function (data, err) {
 		if (err || !data || !data.outfit_list || !data.outfit_list.length || data.outfit_list.length == 0) {
 			showWarning(err);
+			result.classList.remove('loading');
+			result.classList.add('error');
 			return;
 		}
 		
@@ -261,11 +244,15 @@ function loadPlanetside() {
 		$$$(nextUrl, function (data, err) {
 			if (err) {
 				showWarning(err);
+				$('TotalAxilPoints').classList.remove('loading');
+				$('TotalAxilPoints').classList.add('error');
 				return;
 			}
 
 			if (!data || !data.characters_event_grouped_list || !data.characters_event_grouped_list.length || data.characters_event_grouped_list.length != 1) {
 				showWarning(data, 'Either the subject of Axil Points has been deleted (small mercy), or there was an error.');
+				$('TotalAxilPoints').classList.remove('loading');
+				$('TotalAxilPoints').classList.add('error');
 				return;
 			}
 
