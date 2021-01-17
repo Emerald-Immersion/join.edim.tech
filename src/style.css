@@ -34,13 +34,13 @@ main > footer {
 }
 
 main > section {
-    min-width: 260px;
+    min-width: 263px;
     max-width: 320px;
     flex: 1 1 25%;
     box-sizing: border-box;
 }
 
-@media screen and (min-width: 840px) and (max-width: 1337px) {
+@media screen and (min-width: 848px) and (max-width: 1360px) {
     section.split {
         display: flex;
         justify-content: center;
@@ -49,7 +49,6 @@ main > section {
         border: 0 none;
         background: none;
         padding: 0;
-        max-width: 0;
     }
 
     section.split>section {
@@ -80,6 +79,11 @@ button {
     color: #e1edff;
     border: 2px solid #323f4e;
     padding: 10px;
+}
+
+:disabled {
+    color: #555555;
+    cursor: not-allowed;
 }
 
 input:hover,

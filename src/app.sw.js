@@ -1,4 +1,4 @@
-var version = 'v6::';
+var version = 'v1::';
 
 self.addEventListener("install", function (event) {
 	console.log('WORKER: install event in progress.');
@@ -20,7 +20,7 @@ self.addEventListener("install", function (event) {
 			]);
 		}).then(function () {
 			console.log('WORKER: install completed');
-		}).catch(function () {
+		}).catch(function (err) {
 			console.log(err);
 		})
 	);
@@ -38,50 +38,50 @@ self.addEventListener("fetch", function (event) {
 
 	var request = event.request;
 
-	var apiCache = request.url.match(/&callback=.*$/);
-
-	if (apiCache) {
-		console.log('WORKER: fetch api callback detected.');
-	}
-
 	event.respondWith(
 		caches
 		.match(request)
 		.then(function (cached) {
-			var expired = false;
-
+			var expired = true;
+			
 			if (cached) {
-				if (cached.headers.has('Date')) {
-					var fetchDate = new Date(cached.headers.get('Date')).getDate();
-					var expireDate = Date.now();
+				var fetchDate = null;
 
-					if (apiCache) {
-						expireDate -= (1*60000); // 1 min
-					} else if (cached.headers.has('Expires')) {
-						expireDate = new Date(cached.headers.get('Expires')).getDate();
+				if (cached.headers.has('Date')) {
+					fetchDate = new Date(cached.headers.get('Date'));
+					fetchDate = fetchDate.getTime() - fetchDate.getTimezoneOffset() * 60000;
+				}
+
+				if (fetchDate) {
+					var expireDate = new Date(new Date().toISOString()).getTime();
+
+					if (cached.headers.has('Expires')) {
+						expireDate = new Date(cached.headers.get('Expires'));
+						expireDate = expireDate.getTime() - expireDate.getTimezoneOffset() * 60000;
 					} else {
 						expireDate -= (5*60000); // 5 mins
 					}
-
+					
 					if (fetchDate < expireDate) {
-						console.log('WORKER: fetch cache hit', fetchDate, expireDate, request.url);
+						console.log('WORKER: fetch cache hit, not-expired', fetchDate, expireDate, request.url);
+						expired = false;
 					} else {
-						console.log('WORKER: fetch cache expired', fetchDate, expireDate, request.url);
-						expired = true;
+						console.log('WORKER: fetch cache hit, expired', fetchDate, expireDate, request.url);
 					}
 				} else {
-					console.log('WORKER: fetch cache no date', request.url);
-					expired = true;
+					console.log('WORKER: fetch cache hit, no date', request.url);
 				}
 			} else {
 				console.log('WORKER: fetch cache miss', request.url);
 			}
 
-			var networked = fetch(event.request)
-				.then(fetchedFromNetwork, unableToResolve)
-				.catch(unableToResolve);
-
-			return expired ? networked || cached : cached || networked;
+			if (expired) {
+				return fetch(event.request)
+					.then(fetchedFromNetwork, unableToResolve)
+					.catch(unableToResolve);
+			} else {
+				return cached;
+			}
 
 			function fetchedFromNetwork(response) {
 				var cacheCopy = response.clone();
@@ -92,17 +92,17 @@ self.addEventListener("fetch", function (event) {
 						cache.put(request, cacheCopy);
 					}).then(function () {
 						console.log('WORKER: fetch response stored in cache.', request.url);
-					}).catch(function () {
-						console.log(err);
-					});
+					}).catch(function (err) {
+						console.log('WORKER: fetch response store cache error', err)
+					})
 
 				return response;
 			}
 
-			function unableToResolve() {
-				console.log('WORKER: fetch request failed in both cache and network.');
+			function unableToResolve(err) {
+				console.log('WORKER: fetch request failed', err);
 
-				return new Response('<h1>Service Unavailable</h1>', {
+				return cached || new Response('<h1>Service Unavailable</h1>', {
 					status: 503,
 					statusText: 'Service Unavailable',
 					headers: new Headers({

@@ -10,7 +10,7 @@ function $$$(url, callback, timeout) {
 	var callbackMethod = 'callback';
 
 	var callbackUrl = url + callbackMethod;
-
+	
 	if (window[callbackMethod]) {
 		showWarning(null, 'There is currently a request in progress, please wait...');
 		return;
@@ -170,13 +170,11 @@ var axilPointCache = null;
  * 
  */
 function tidyMemberListCache () {
-	var now = Date.now();
-
-	var fiveMinsAgo = now - (5*60000);
+	var expire = Date.now() - (1*60000);
 
 	try {
 		for (key in memberListCache) {
-			if (memberListCache[key] < fiveMinsAgo) {
+			if (memberListCache[key].updated < expire) {
 				delete memberListCache[key];
 			}
 		}
