@@ -1,3 +1,4 @@
+"use strict";
 
 function $(id) {
 	return document.getElementById(id);
@@ -5,20 +6,22 @@ function $(id) {
 function $$(selectors) {
 	return document.querySelectorAll(selectors);
 }
-function $$$(url, callback, timeout = 15000) {
+function $$$(url, callback, timeout) {
 	var callbackMethod = 'callback';
 
 	var callbackUrl = url + callbackMethod;
 
-	if (navigator.onLine) {
+	var online = navigator.onLine;
+
+	if (online) {
 		if (window[callbackMethod]) {
-			showWarning(null, 'There is currently a request in progress, please wait...')
+			showWarning(null, 'There is currently a request in progress, please wait...');
 			return;
 		}
 	
 		var timeoutHandle = setTimeout(function () {
 			callback(null, new Error('Request Timeout'));
-		}, timeout);
+		}, timeout || 15000);
 	
 		window[callbackMethod] = function (data) {
 			clearTimeout(timeoutHandle);
@@ -127,7 +130,9 @@ function buildUserDeathsApiUrl(userid) {
 }
 /** */
 function changeOnlineStatus() {
-	if (navigator.onLine) {
+	var online = navigator.onLine;
+
+	if (online) {
 		$('footer').style.display = '';
 		$('footer_loading').style.display = '';
 		$('footer_loading_message').style.display = 'none';
@@ -829,6 +834,7 @@ function sort(e, forceDirection) {
 	}
 
 	var alreadySorted = false;
+	var direction = 0;
 
 	if (table.dataset.sorted == col + '-') {
 		alreadySorted = true;
