@@ -8,13 +8,13 @@ var config = {
                 { id: 884, name: 'Nanite Revive Grenade' },
             ],
             'Engineer': [
-                { id: 8125, name: 'Engineer Flak Armour 5' },
+                { id: 8125, name: 'Flak Armour 5' },
                 { id: 6010, name: 'Nano-Armor Kit 6 (VS)' },
                 { id: 1278, name: 'Ammunition Package 6' },
                 { id: 6004531, name: 'Reserve Hardlight Barrier' },
             ],
             'Heavy': [
-                { id: 7697, name: 'Heavy Assault Flak Armour 5' },
+                { id: 7697, name: 'Flak Armour 5' },
                 { id: 101, name: 'Medical Kits (x4)', 'stack_count': 4 },
                 { id: 8823, name: 'Adrenaline Shield 5' },
                 { id: 1096, name: 'Concussion Grenades' },
