@@ -589,8 +589,18 @@ function renderMemberList(data, err) {
 			}
 
 			var td = document.createElement('td');
-			if (member.name) td.innerText = member.name.first;
-			td.onclick = pickOutfitMember;
+			if (member.name) {
+				td.innerText = member.name.first;
+
+				// TODO: Perhaps use span and use offsetWidth or something
+				var upperCount = (member.name.first.match(/[A-Z]/g) || []).length
+
+				if (member.name.first.length > 12 || upperCount > 8) {
+					td.dataset.tooltip = member.name.first;
+				}
+
+				td.onclick = pickOutfitMember;
+			}
 			tr.appendChild(td);
 
 			td = document.createElement('td');

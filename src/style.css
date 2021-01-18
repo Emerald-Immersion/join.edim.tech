@@ -40,6 +40,23 @@ main > section {
     box-sizing: border-box;
 }
 
+@media screen and (max-width: 420px) {
+    main > * {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        width: 320px !important;
+        min-width: 320px !important;
+        max-width: 320px !important;
+    }
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+}
+
 @media screen and (min-width: 848px) and (max-width: 1360px) {
     section.split {
         display: flex;
@@ -192,6 +209,11 @@ table thead th:hover {
 
 @media screen and (max-width: 600px) {
 
+    p.mobile {
+        display: block !important;
+        color:#777;
+    }
+
     .rank-table th:nth-child(7),
     .rank-table td:nth-child(7) {
         display: none;
@@ -207,10 +229,31 @@ table thead th:hover {
         display: none;
     }
 
+    .member-table th:nth-child(1),
+    .member-table td:nth-child(1) {
+        min-width: 100px;
+    }
+
+    .member-table th:nth-child(2),
+    .member-table td:nth-child(2) {
+        max-width: 50px;
+    }
+
+    .member-table th:nth-child(4),
+    .member-table td:nth-child(4) {
+        display: none;
+    }
+
+    .member-table th:nth-child(5),
+    .member-table td:nth-child(5) {
+        display: none;
+    }
+    
     .member-table td {
         max-width: 50px;
     }
 }
+
 
 #footer_loading {
     min-height: 50px;
