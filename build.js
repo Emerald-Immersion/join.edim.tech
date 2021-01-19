@@ -2,7 +2,7 @@ const fs = require('fs');
 
 const copyFileCallback = (err) => {
     if (err) { 
-        if ( err.code == 'ENOENT') { 
+        if (err.code == 'ENOENT') { 
             console.log('File does not exist (try npm install):' + err.path)
         } else {
             console.log(err);

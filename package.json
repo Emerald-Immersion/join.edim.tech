@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "npm install && node build",
+    "start": "node debug.js",
     "publish": "push-dir --dir=src --branch=gh-pages"
   },
   "repository": {

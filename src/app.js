@@ -1,5 +1,9 @@
 "use strict";
 
+window.onerror = function(message, url, line, col, err) {
+    console.log(message, url, line, col, err);
+}
+
 function $(id) {
 	return document.getElementById(id);
 }
@@ -42,6 +46,7 @@ function $$$(url, callback, timeout) {
  * Entry Point
  */
 function app() {
+	try { loadTopBars(); } catch (err) { console.log(err) }
 	try { loadImages(); } catch (err) { console.log(err) }
 	try { loadParticles(); } catch (err) { console.log(err) }
 	try { loadPlanetside(); } catch (err) { console.log(err) }
@@ -60,6 +65,72 @@ function app() {
 
 	window.addEventListener('online', changeOnlineStatus);
 	window.addEventListener('offline', changeOnlineStatus);
+
+	setTimeout(tamperDetection, 2000);
+}
+/**
+ * 
+ */
+function loadTopBars() {
+	/*$$('top-bar').forEach(function (el) {
+		if (el.id) {
+			if (localStorage.getItem(`dismiss_${el.id}`) == 'true') {
+				el.hide();
+			}
+
+			var button = document.createElement('div');
+			button.innerText = 'dismiss';
+			button.classList.add('button');
+			button.onclick(function (e) {
+
+			})
+			el.appendChild(button);
+		}
+	})*/
+}
+/**
+ * 
+ */
+function tamperDetection() {
+	fetch('/', {
+		method: 'GET',
+		headers: {
+		    Accept: 'text/html',
+		},
+	}).then(res => {
+		return res.text();
+	}).then(str => {
+		if (!str || str.length == 0) {
+			throw 'Body empty';
+		}
+
+		var html = document.createElement('html');
+
+		html.innerHTML = str;
+
+		var originalHead = html.getElementsByTagName('head')[0];
+
+		if (!document.head.isEqualNode(originalHead)) {
+			var tampered = document.head.innerHTML.split(/[\r\n]+/);
+			var originalLookup = str.split(/[\r\n]+/).reduce((a,c)=> (a[c]='',a),{});
+
+			var changed = [];
+
+			for (var t of tampered) {
+				if (!originalLookup[t]) {
+					changed.push(t);
+				}
+			}
+
+			console.log('Head has been tampered with:', changed);
+
+			// document.head.innerHTML = originalHead.innerHTML;
+		} else {
+			console.log('Head has not been tampered with.');
+		}
+	}).catch((err) => {
+		console.log(err);
+	})
 }
 /**
  * 

@@ -83,10 +83,35 @@ img {
     }
 }
 
+/* Compat */
+.top-bar {
+    width: 100vw;
+    text-align: center;
+    padding: 5px 0;
+}
+.top-bar.error {
+    background-color: darkred;
+    color: white;
+}
+.top-bar.warning {
+    background-color: darkorange;
+    color: black;
+}
+.top-bar div {
+    float: right;
+}
+@media all and (-ms-high-contrast: none), (-ms-high-contrast: active) {
+    .top-bar.ie {
+        display: block !important;
+    }
+}
 
 /* Theme */
+html {
+    background: transparent !important;
+}
 body {
-    background: #1c262f;
+    background: #1c262f !important;
     color: #90a3c0;
 }
 
@@ -119,6 +144,11 @@ input:-webkit-autofill {
 
 input:-webkit-autofill:focus {
     -webkit-text-fill-color: #e1edff;
+}
+
+label span {
+    display: block;
+    padding: 10px 0 15px 0;
 }
 
 .button {
@@ -375,4 +405,8 @@ table thead th:hover {
 [data-tooltip]:hover::after {
     visibility: visible;
     opacity: 1;
+}
+
+:root {
+    color-scheme: dark;
 }

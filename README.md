@@ -12,11 +12,17 @@ To build with `vscode` press `Ctrl + Shift + B` or otherwise run `npm run-script
 This downloads dependencies with `npm install` and executes the build script which creates the `src/modules` folder.
 
 ## Debug
-To debug you can use `vscode` and press `F5`, otherwise run `src/index.html` in your browser.
+To debug you can use `vscode` and press `F5`.
 
-With VSCode it will open a debug instance of Chrome with working breakpoints.
+With VSCode it will open run the web server and a debug instance of Chrome with working breakpoints. 
+
+Otherwise by hand, start the web server with: `NODE_HTTP_PORT=8080 node debug.js`
+
+Then visit in your browser: `http://127.0.0.1:8080`
 
 ## Release
+Before commiting changes, remember to increment the version on line 1 in `src\app.sw.js`.
+
 After commiting changes, to release to github pages run `npm run-script publish`.
 
 This will replace the contents of the `gh-pages` branch with the `src` folder.

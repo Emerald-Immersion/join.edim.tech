@@ -10,6 +10,7 @@
     <link rel="manifest" href="/site.webmanifest" />
     <link rel="icon" href="media/EDIM_512.png" />  
     <meta name="theme-color" content="#1c262f" />
+    <meta name="color-scheme" content="dark" />
     <meta name="msapplication-TileColor" content="#1c262f" />
     <meta name="msapplication-TileImage" content="media/EDIM_512.png" />
     <meta name="msapplication-navbutton-color" content="#1c262f">
@@ -17,6 +18,12 @@
     <link rel="stylesheet" media="screen" href="style.css" />
 </head>
 <body>
+    <noscript>
+        <div class="strip error">This site works best with JavaScript enabled, links to TeamSpeak and Discord do work without.</div>
+    </noscript>
+    <!--[if IE ]><div class="strip error">You are using an very outdated browser: <a href="https://www.updatemybrowser.org/">https://www.updatemybrowser.org/</a></div><![endif]-->
+    <div id="strip-ie" class="strip warning ie" style="display: none;">You are using an outdated browser: <a href="https://www.updatemybrowser.org/">https://www.updatemybrowser.org/</a></div>
+    <div id="strip-error" class="strip error" style="display: none;"></div>
     <div id="particles-js"></div>
     <main>
         <header>
@@ -60,18 +67,18 @@
         <section class="split">
             <section>
                 <form id="memberlist" name="memberlist" onsubmit="return memberlistSubmit()">
-                    <label><p>Planetside Outfit Lookup Tool</p><input type="text" name="outfitalias" id="outfitalias" pattern="[a-zA-Z0-9]+" minlength="1" maxlength="4" required value="EDIM" /></label>
+                    <label><span>Planetside Outfit Lookup Tool</span><input type="text" name="outfitalias" id="outfitalias" pattern="[a-zA-Z0-9]+" minlength="1" maxlength="4" required value="EDIM" /></label>
                     <button id="memberlist-submit" type="submit" disabled>Submit</button>
                 </form>
             </section>
             <section>
                 <form id="userdetail" name="userdetail" onsubmit="return userdetailSubmit()">
-                    <label><p>Planetside Player Lookup Tool</p><input type="text" name="username" id="username" pattern="[a-zA-Z0-9]+" minlength="3" maxlength="32" required /></label>
+                    <label><span>Planetside Player Lookup Tool</span><input type="text" name="username" id="username" pattern="[a-zA-Z0-9]+" minlength="3" maxlength="32" required /></label>
                     <button id="userdetail-submit" type="submit" disabled>Submit</button>
                 </form>
             </section>
         </section>
-        <footer id="footer" style="display: none;" >
+        <footer id="footer" style="display: none;">
             <span id="footer_information" style="display: none;"></span>
             <div id="footer_loading" style="display: none;" class="loading">
                 <span id="footer_loading_progress"></span>
