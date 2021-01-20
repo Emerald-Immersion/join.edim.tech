@@ -826,6 +826,7 @@ function renderUserDetail(data, err) {
 				contain.appendChild(h4);
 				
 				var ul = document.createElement("ul");
+				ul.classList.add('float');
 				contain.appendChild(ul);
 
 				for (var item of rank[groupName]) {
