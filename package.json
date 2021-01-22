@@ -2,7 +2,7 @@
   "name": "join.edim.tech",
   "version": "1.0.0",
   "description": "Emerald Immersion join splash page",
-  "main": "index.js",
+  "main": "debug.js",
   "scripts": {
     "build": "npm install && node build",
     "start": "node debug.js",

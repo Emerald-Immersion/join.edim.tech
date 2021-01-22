@@ -1,20 +1,22 @@
 "use strict";
 
-window.onerror = function(message, url, line, col, err) {
-    console.log(message, url, line, col, err);
+window.onerror = function (message, url, line, col, err) {
+	console.log(message, url, line, col, err);
 }
 
 function $(id) {
 	return document.getElementById(id);
 }
+
 function $$(selectors) {
 	return document.querySelectorAll(selectors);
 }
+
 function $$$(url, callback, timeout) {
 	var callbackMethod = 'callback';
 
 	var callbackUrl = url + callbackMethod;
-	
+
 	if (window[callbackMethod]) {
 		showWarning(null, 'There is currently a request in progress, please wait...');
 		return;
@@ -34,7 +36,7 @@ function $$$(url, callback, timeout) {
 
 	var script = document.createElement('script');
 	script.src = callbackUrl;
-	
+
 	try {
 		document.body.appendChild(script);
 	} catch (err) {
@@ -46,16 +48,32 @@ function $$$(url, callback, timeout) {
  * Entry Point
  */
 function app() {
-	try { loadTopBars(); } catch (err) { console.log(err) }
-	try { loadImages(); } catch (err) { console.log(err) }
-	try { loadParticles(); } catch (err) { console.log(err) }
-	try { loadPlanetside(); } catch (err) { console.log(err) }
+	try {
+		loadTopBars();
+	} catch (err) {
+		console.log(err)
+	}
+	try {
+		loadImages();
+	} catch (err) {
+		console.log(err)
+	}
+	try {
+		loadParticles();
+	} catch (err) {
+		console.log(err)
+	}
+	try {
+		loadPlanetside();
+	} catch (err) {
+		console.log(err)
+	}
 
 	if ('serviceWorker' in navigator) {
 		console.log('CLIENT: service worker registration in progress.');
-		navigator.serviceWorker.register('/app.sw.js').then(function() {
+		navigator.serviceWorker.register('/app.sw.js').then(function () {
 			console.log('CLIENT: service worker registration complete.');
-		}, function(err) {
+		}, function (err) {
 			console.log('CLIENT: service worker registration failure.');
 			console.log(err);
 		});
@@ -95,11 +113,11 @@ function tamperDetection() {
 	fetch('/', {
 		method: 'GET',
 		headers: {
-		    Accept: 'text/html',
+			Accept: 'text/html',
 		},
-	}).then(res => {
+	}).then(function (res) {
 		return res.text();
-	}).then(str => {
+	}).then(function (str) {
 		if (!str || str.length == 0) {
 			throw 'Body empty';
 		}
@@ -112,7 +130,9 @@ function tamperDetection() {
 
 		if (!document.head.isEqualNode(originalHead)) {
 			var tampered = document.head.innerHTML.split(/[\r\n]+/);
-			var originalLookup = str.split(/[\r\n]+/).reduce((a,c)=> (a[c]='',a),{});
+			var originalLookup = str.split(/[\r\n]+/).reduce(function (a, c) {
+				return (a[c] = '', a);
+			}, {});
 
 			var changed = [];
 
@@ -128,7 +148,7 @@ function tamperDetection() {
 		} else {
 			console.log('Head has not been tampered with.');
 		}
-	}).catch((err) => {
+	}).catch(function (err) {
 		console.log(err);
 	})
 }
@@ -139,10 +159,10 @@ function loadImages() {
 	$$('img').forEach(function (tag) {
 		var curImg = new Image();
 
-		curImg.onload = function() {
+		curImg.onload = function () {
 			tag.src = tag.dataset.src;
 		}
-		
+
 		curImg.src = tag.dataset.src;
 	})
 }
@@ -150,7 +170,37 @@ function loadImages() {
  * 
  */
 function loadParticles() {
-	particlesJS('particles-js',	JSON.parse(config.particles));
+	var fps = 60;
+
+	window.requestAnimationFrame = window.requestAnimationFrame ||
+		window.mozRequestAnimationFrame    ||
+		window.oRequestAnimationFrame      ||
+		window.msRequestAnimationFrame;
+	
+	window.cancelAnimationFrame = window.cancelAnimationFrame ||
+		window.webkitCancelRequestAnimationFrame ||
+		window.mozCancelRequestAnimationFrame    ||
+		window.oCancelRequestAnimationFrame      ||
+		window.msCancelRequestAnimationFrame;
+	
+	window.requestAnimFrame = function (cb) {
+		cb.timeoutHandle = setTimeout(function () {
+			if (window.requestAnimationFrame) {
+				window.requestAnimationFrame(cb);
+			} else {
+				cb();
+			}
+		}, 1000 / fps);
+	}
+	
+	window.cancelRequestAnimFrame = function (cb) {
+		if (cb.timeoutHandle) {
+			clearTimeout(cb.timeoutHandle);
+		}
+		window.cancelAnimationFrame(cb);
+	}
+	
+	particlesJS('particles-js', JSON.parse(config.particles));
 }
 /**
  * 
@@ -199,7 +249,7 @@ function showWarning(err, msg) {
 	$('footer_warning').style.display = '';
 	$('footer_loading').style.display = 'none';
 	$('footer').style.display = '';
-	
+
 	$('memberlist-submit').disabled = false;
 	$('userdetail-submit').disabled = false;
 }
@@ -213,8 +263,10 @@ function showError(err) {
 	$('footer_loading').style.display = 'none';
 	$('footer_error').style.display = '';
 
-	$('footer_error').scrollIntoView({ behavior: 'smooth' });
-	
+	$('footer_error').scrollIntoView({
+		behavior: 'smooth'
+	});
+
 	$('memberlist-submit').disabled = false;
 	$('userdetail-submit').disabled = false;
 }
@@ -226,7 +278,7 @@ function showData() {
 	$('footer_warning').style.display = 'none';
 	$('footer_error').style.display = 'none';
 	$('footer_loading').style.display = 'none';
-	
+
 	$('memberlist-submit').disabled = false;
 	$('userdetail-submit').disabled = false;
 
@@ -240,8 +292,8 @@ var axilPointCache = null;
 /**
  * 
  */
-function tidyMemberListCache () {
-	var expire = Date.now() - (1*60000);
+function tidyMemberListCache() {
+	var expire = Date.now() - (1 * 60000);
 
 	try {
 		for (key in memberListCache) {
@@ -258,7 +310,7 @@ function tidyMemberListCache () {
  */
 function loadPlanetside() {
 	var url = buildOutfitListApiUrl('edim');
-	
+
 	var result = $('planetside-result');
 
 	$('ActiveLeaders').innerText = '';
@@ -271,7 +323,7 @@ function loadPlanetside() {
 
 	result.classList.remove('error');
 	result.classList.add('loading');
-	
+
 	$$$(url, function (data, err) {
 		if (err || !data || !data.outfit_list || !data.outfit_list.length || data.outfit_list.length == 0) {
 			showWarning(err);
@@ -279,21 +331,21 @@ function loadPlanetside() {
 			result.classList.add('error');
 			return;
 		}
-		
+
 		var now = Date.now();
-		
-		setTimeout(tidyMemberListCache, (5*60000));
+
+		setTimeout(tidyMemberListCache, (5 * 60000));
 
 		var outfit_list = data.outfit_list[0];
-		
+
 		memberListCache[outfit_list['alias_lower']] = {
 			updated: now,
 			data: data
 		}
-	
+
 		var ranks = calcMemberRanks(data);
 		var rankSums = sumMemberRanks(ranks);
-		
+
 		$('ActiveLeaders').innerText = rankSums.total.activeLeaders;
 		$('ActiveMembersNow').innerText = rankSums.total.activeNow;
 		$('ActiveMembersToday').innerText = rankSums.total.activeToday;
@@ -303,11 +355,11 @@ function loadPlanetside() {
 		$('TotalPrestige').innerText = rankSums.total.totalPrestige;
 		$('TotalBattleRank').innerText = rankSums.total.totalBattleRank;
 		$('AvgBattleRank').innerText = rankSums.average.totalBattleRank;
-		
+
 		$('TotalAxilPoints').className = 'loading';
 
 		var thatGuy = '5428059164954198113';
-		
+
 		var nextUrl = buildUserDeathsApiUrl(thatGuy);
 
 		$$$(nextUrl, function (data, err) {
@@ -329,22 +381,32 @@ function loadPlanetside() {
 				axilPointCache = data.characters_event_grouped_list[0];
 
 				axilPointCache[thatGuy].count = 0;
-				axilPointCache[thatGuy].count = Object.values(axilPointCache).map((c) => Number(c.count)).reduce((a,c)=>{ if (c > a) { return c } else { return a } });
+				axilPointCache[thatGuy].count = Object.values(axilPointCache).map(function (c) {
+					return Number(c.count)
+				}).reduce(function (a, c) {
+					if (c > a) {
+						return c
+					} else {
+						return a
+					}
+				});
 				axilPointCache[thatGuy].count += 1;
 
-				// var total = Object.values(axilPointCache).map((c) => Number(c.count)).reduce((a,c)=>a+c);
-				var current = calcAxilPoints(outfit_list.members.map(a => a.character_id));
+				// var total = Object.values(axilPointCache).map(function (c) { return Number(c.count); }).reduce(function (a,c) { return a+c; });
+				var current = calcAxilPoints(outfit_list.members.map(function (a) {
+					return a.character_id;
+				}));
 
 				$('TotalAxilPoints').innerText = current;
 				$('TotalAxilPoints').className = null;
-				
+
 				$('memberlist-submit').disabled = false;
 				$('userdetail-submit').disabled = false;
 			} catch (e) {
 				showError(e);
 			}
 		})
-	
+
 		result.classList.remove('loading');
 	});
 }
@@ -354,7 +416,7 @@ function loadPlanetside() {
 function memberlistSubmit() {
 	try {
 		var outfitalias = $('outfitalias').value;
-		
+
 		var url = buildOutfitListApiUrl(outfitalias);
 
 		$('memberlist-submit').disabled = true;
@@ -367,7 +429,7 @@ function memberlistSubmit() {
 		// $('userdetail_results').style.display = 'none';
 		$('footer').style.display = '';
 
-		var fiveMinsAgo = Date.now() - (5*60000);
+		var fiveMinsAgo = Date.now() - (5 * 60000);
 
 		if (memberListActive != outfitalias && memberListCache[outfitalias] && memberListCache[outfitalias].updated > fiveMinsAgo) {
 			renderMemberList(memberListCache[outfitalias].data);
@@ -384,7 +446,7 @@ function memberlistSubmit() {
  * 
  */
 function userdetailSubmit() {
-	try {        
+	try {
 		var username = $('username').value;
 
 		var url = buildUserApiUrl(username);
@@ -427,28 +489,27 @@ function calcAxilPoints(members) {
  * @param {*} data 
  */
 function calcMemberRanks(data) {
-	var ranks = { };
-	
+	var ranks = {};
+
 	var outfit_list = data.outfit_list[0];
 
-	var lastHour = Date.now() - (60*60000);
-	
+	var lastHour = Date.now() - (60 * 60000);
+
 	var today = new Date();
 	if (today.getHours() < 6) {
 		today.setDate(today.getDate() - 1);
 	}
-	today.setHours(6,0,0,0);
+	today.setHours(6, 0, 0, 0);
 
 	var week = new Date();
-	week.setHours(0,0,0,0);
+	week.setHours(0, 0, 0, 0);
 	week.setDate(week.getDate() - 7);
 
 	var month = new Date();
-	month.setHours(0,0,0,0);
+	month.setHours(0, 0, 0, 0);
 	month.setMonth(month.getMonth() - 1);
-	
-	for (var i = 0; i < outfit_list.members.length; i++)
-	{
+
+	for (var i = 0; i < outfit_list.members.length; i++) {
 		var member = outfit_list.members[i];
 
 		if (!member['rank']) {
@@ -469,7 +530,7 @@ function calcMemberRanks(data) {
 				'totalPrestige': 0
 			}
 		}
-		
+
 		var rank = ranks[rankName];
 
 		rank['members']++;
@@ -480,7 +541,7 @@ function calcMemberRanks(data) {
 			var lastActiveTimeUnixTimestamp = Math.max(times['last_login'], times['last_save']);
 
 			if (lastActiveTimeUnixTimestamp) {
-				var lastActiveTime = new Date(lastActiveTimeUnixTimestamp*1000);
+				var lastActiveTime = new Date(lastActiveTimeUnixTimestamp * 1000);
 
 				if (lastActiveTime > lastHour || member['online_status'] != 0) {
 					rank['activeNow']++;
@@ -489,24 +550,24 @@ function calcMemberRanks(data) {
 				if (lastActiveTime > today) {
 					rank['activeToday']++;
 				}
-				
+
 				if (lastActiveTime > week) {
 					rank['activeWeek']++;
 				}
-				
+
 				if (lastActiveTime > month) {
 					rank['activeMonth']++;
 				}
 			}
 		}
-		
+
 		if (member['prestige_level']) {
-			rank['totalPrestige'] += member['prestige_level']*1;
+			rank['totalPrestige'] += member['prestige_level'] * 1;
 		}
 
 		if (member['battle_rank'] && member['battle_rank']['value']) {
 			// probably need to add prestige_level*125 or 100
-			rank['totalBattleRank'] += member['battle_rank']['value']*1;
+			rank['totalBattleRank'] += member['battle_rank']['value'] * 1;
 		}
 	}
 
@@ -524,7 +585,7 @@ function sumMemberRanks(ranks) {
 			'activeNow': 0,
 			'activeToday': 0,
 			'activeWeek': 0,
-			'activeMonth': 0, 
+			'activeMonth': 0,
 			'totalBattleRank': 0,
 			'totalPrestige': 0
 		},
@@ -555,7 +616,7 @@ function sumMemberRanks(ranks) {
 	}
 
 	for (var i in sums.average) {
-		sums.average[i] = Math.round((sums.average[i]/sums.total.members)*100)/100;
+		sums.average[i] = Math.round((sums.average[i] / sums.total.members) * 100) / 100;
 	}
 
 	return sums;
@@ -577,25 +638,25 @@ function renderMemberList(data, err) {
 		}
 
 		var now = Date.now();
-		
-		var lastHour = now - (60*60000);
 
-		setTimeout(tidyMemberListCache, (5*60000));
+		var lastHour = now - (60 * 60000);
+
+		setTimeout(tidyMemberListCache, (5 * 60000));
 
 		var outfit_list = data.outfit_list[0];
-		
+
 		memberListCache[outfit_list['alias_lower']] = {
 			updated: now,
 			data: data
 		}
 		memberListActive = outfit_list['alias_lower'];
-	
+
 		$('outfit-name').innerText = outfit_list['name'];
 		$('outfit-created').innerText = outfit_list['time_created_date'];
 		$('outfit-members').innerText = outfit_list['member_count'];
-		
+
 		var ranks = calcMemberRanks(data);
-		
+
 		var rankResults = $('rank-tbody');
 		rankResults.innerHTML = '';
 
@@ -610,12 +671,14 @@ function renderMemberList(data, err) {
 			tr.appendChild(td);
 
 			for (var i in rank) {
-				if (i == 'ordinal') { continue }
+				if (i == 'ordinal') {
+					continue
+				}
 				td = document.createElement('td');
 				td.innerText = rank[i];
 				tr.appendChild(td);
 			}
-			
+
 			rankResults.appendChild(tr);
 		}
 
@@ -631,16 +694,17 @@ function renderMemberList(data, err) {
 		$('outfit-average-battlerank').innerText = rankSums.average['totalBattleRank'];
 
 		if (axilPointCache) {
-			$('outfit-axilpoints').innerText = calcAxilPoints(outfit_list.members.map(a => a.character_id));
+			$('outfit-axilpoints').innerText = calcAxilPoints(outfit_list.members.map(function (a) {
+				return a.character_id;
+			}));
 		}
 
 		var memberResults = $('member-tbody');
-		
+
 		// TODO: Use existing rows
 		memberResults.innerHTML = '';
 
-		for (var i = 0; i < outfit_list.members.length; i++)
-		{
+		for (var i = 0; i < outfit_list.members.length; i++) {
 			var member = outfit_list.members[i];
 
 			var tr = document.createElement('tr');
@@ -649,7 +713,7 @@ function renderMemberList(data, err) {
 
 			if (member.times) {
 				var lastActiveTimeUnixTimestamp = Math.max(member.times['last_login'], member.times['last_save']);
-				lastActiveTime = new Date(lastActiveTimeUnixTimestamp*1000);
+				lastActiveTime = new Date(lastActiveTimeUnixTimestamp * 1000);
 			}
 
 			if (member.online_status && member.online_status > 0) {
@@ -675,16 +739,14 @@ function renderMemberList(data, err) {
 			tr.appendChild(td);
 
 			td = document.createElement('td');
-			if (member.battle_rank && member.battle_rank.value && member.prestige_level)
-			{
+			if (member.battle_rank && member.battle_rank.value && member.prestige_level) {
 				td.innerText = member.battle_rank.value + ' (' + member.prestige_level + ')';
 				td.dataset.value = Number(member.battle_rank.value) + (Number(member.prestige_level) * 1000);
 			}
 			tr.appendChild(td);
 
 			td = document.createElement('td');
-			if (member.rank)
-			{
+			if (member.rank) {
 				td.innerText = member.rank;
 				td.dataset.value = member.rank_ordinal;
 			}
@@ -702,27 +764,29 @@ function renderMemberList(data, err) {
 			tr.appendChild(td);
 
 			td = document.createElement('td');
-			
+
 			var str = lastActiveTime.toISOString()
 
 			td.innerText = str.substring(0, 10);
 			td.dataset.tooltip = str;
 
 			tr.appendChild(td);
-			
+
 			memberResults.appendChild(tr);
 		}
 
 		sort($('ranksort0'));
-		
+
 		sort($('membersort4'));
 		sort($('membersort2'));
-		
+
 		$('memberlist_results').style.display = '';
 		showData();
 
 		if ($('userdetail_results').style.display != 'none' || screen.width <= 600) {
-			$('memberlist_results').scrollIntoView({ behavior: 'smooth' });
+			$('memberlist_results').scrollIntoView({
+				behavior: 'smooth'
+			});
 		}
 	} catch (e) {
 		showError(e);
@@ -736,20 +800,25 @@ function formatTimeFromMins(mins) {
 	var m = Number(mins);
 	var s = null;
 
-	if (m < 60) { s = 'Minutes'; }
-	else {
+	if (m < 60) {
+		s = 'Minutes';
+	} else {
 		m /= 60;
-		if (m < 24) { s = 'Hours'; }
-		else {
-			m /= 24;	
-			if (m < 7) { s = 'Days'; }
-			else {
+		if (m < 24) {
+			s = 'Hours';
+		} else {
+			m /= 24;
+			if (m < 7) {
+				s = 'Days';
+			} else {
 				m /= 7;
-				if (m < 4.345) { s = 'Weeks'; }
-				else {
+				if (m < 4.345) {
+					s = 'Weeks';
+				} else {
 					m /= 4.345;
-					if (m < 12) { s = 'Months'; }
-					else {
+					if (m < 12) {
+						s = 'Months';
+					} else {
 						m /= 12;
 						s = 'Years';
 					}
@@ -757,14 +826,14 @@ function formatTimeFromMins(mins) {
 			}
 		}
 	}
-	
+
 	return `${Math.round(m*100)/100} ${s}`;
 }
 
 function pickOutfitMember(e) {
 	$('username').value = e.srcElement.innerText;
 
-	$('username').parentElement.parentElement.parentElement.scrollIntoView({ 
+	$('username').parentElement.parentElement.parentElement.scrollIntoView({
 		behavior: 'smooth'
 	});
 
@@ -802,8 +871,9 @@ function renderUserDetail(data, err) {
 			$('userdetail-online').className = null;
 		}
 
-		var items = character.items.reduce((p,c) => {
-			var id = Number(c.item_id); delete c.item_id;
+		var items = character.items.reduce(function (p, c) {
+			var id = Number(c.item_id);
+			delete c.item_id;
 			p[id] = c;
 			return p;
 		}, {});
@@ -824,7 +894,7 @@ function renderUserDetail(data, err) {
 				var h4 = document.createElement("h4");
 				h4.innerText = groupName;
 				contain.appendChild(h4);
-				
+
 				var ul = document.createElement("ul");
 				ul.classList.add('float');
 				contain.appendChild(ul);
@@ -837,7 +907,7 @@ function renderUserDetail(data, err) {
 					if (item.tooltip) {
 						li.dataset.tooltip = item.tooltip;
 					}
-					
+
 					var hasSkill = false;
 
 					if (Array.isArray(item.id)) {
@@ -869,12 +939,14 @@ function renderUserDetail(data, err) {
 				}
 			}
 		}
-		
+
 		$('userdetail_results').style.display = '';
 		showData();
-		
+
 		if (screen.width <= 600) {
-			$('userdetail_results').scrollIntoView({ behavior: 'smooth' });
+			$('userdetail_results').scrollIntoView({
+				behavior: 'smooth'
+			});
 		}
 	} catch (e) {
 		showError(e);
@@ -928,7 +1000,7 @@ function sort(e, forceDirection) {
 		var row = rows[i];
 		var cell = row.children[col];
 		var last = row;
-		
+
 		if (alreadySorted) {
 			if (i < rows.length - 1) {
 				row = rows[0];
@@ -961,7 +1033,7 @@ function sort(e, forceDirection) {
 				}
 			}
 		}
-		
+
 		if (row != last) {
 			tbody.insertBefore(row, last);
 			// new, existing
