@@ -858,9 +858,11 @@ function renderUserDetail(data, err) {
 		$('userdetail-rank').innerText = character.battle_rank.value + '.' + character.battle_rank.percent_to_next;
 		$('userdetail-totaltime').innerText = formatTimeFromMins(character.times.minutes_played);
 		$('userdetail-creation').innerText = character.times.creation_date;
+		$('userdetail-accountage').innerText = formatTimeFromMins((Date.now() - Number(character.times.creation*1000))/60000);
 		$('userdetail-lastlogon').innerText = character.times.last_login_date;
 		$('userdetail-lastsave').innerText = character.times.last_save_date;
 		$('userdetail-totalitems').innerText = character.items.length;
+		$('userdetail-spentcerts').innerText = character.certs.spent_points;
 		$('userdetail-axilpoints').innerText = calcAxilPoints([character.character_id]);
 
 		if (character.online_status > 0) {

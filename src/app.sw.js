@@ -1,4 +1,4 @@
-var version = 'v13::';
+var version = 'v14::';
 
 self.addEventListener("install", function (event) {
 	console.log('WORKER: install event in progress.');
