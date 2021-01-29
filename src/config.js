@@ -78,10 +78,10 @@ var config = {
                 { id: 17004, name: "NS-10 Burster" }
             ],
             'Harasser': [
-                { id: 3441, name: "E540 Halberd" },
-                { id: [2684,3003,3113,3511,4392,5398,5529,6131,6572], name: "Fire Suppression 1" },
-                { id: [2991,3159,3486,4308,5275,5444,5639,6160,6581], name: "Vehicle Stealth 1" },
-                { id: [2727,3056,3294,3528,6174,803532], name: "Racer High Speed Chassis 1" },
+                { id: 6118, name: "E540 Halberd" },
+                { id: 6131, name: "Fire Suppression 1" },
+                { id: 6160, name: "Vehicle Stealth 1" },
+                { id: 6174, name: "Racer High Speed Chassis 1" },
             ],
             'Deployment Sunderer': [
                 { id: 3086, name: "Primary G40-F Ranger" },
