@@ -31,7 +31,7 @@
             <h1>[EDIM] Emerald Immersion</h1>
         </header>
         <section>
-            <a href="ts3server://ts.edim.tech">
+            <a href="ts3server://ts.edim.tech?addbookmark=Emerald%20Immersion">
                 <img src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="media/teamspeak.png" width="200" height="60.172" alt="" />
                 <br />
                 <p>Join us on Teamspeak for Organised Voice Comms.</p>
@@ -64,118 +64,155 @@
                 <span class="button">Join Discord</span>
             </a>
         </section>
-        <section class="split">
+        <footer id="footer" class="tabs">
+            <input id="tab1" type="radio" name="tab" checked>
+            <input id="tab2" type="radio" name="tab">
+            <input id="tab3" type="radio" name="tab">
+            <nav>
+                <label for="tab1">Planetside Outfit Lookup</label>
+                <label for="tab2">Planetside Player Lookup</label>
+                <label for="tab3">Planetside Monitor</label>
+            </nav>
             <section>
-                <form id="memberlist" name="memberlist" onsubmit="return memberlistSubmit()">
-                    <label><span>Planetside Outfit Lookup Tool</span><input type="text" name="outfitalias" id="outfitalias" pattern="[a-zA-Z0-9]+" minlength="1" maxlength="4" required value="EDIM" /></label>
-                    <button id="memberlist-submit" type="submit" disabled>Submit</button>
-                </form>
+                <span id="footer_information" style="display: none;"></span>
+                <div id="footer_loading" style="display: none;" class="loading">
+                    <span id="footer_loading_progress"></span>
+                </div>
+                <div id="footer_warning" style="display: none;">
+                    <span id="footer_warning_message" class="avg"></span>
+                </div>
+                <div id="footer_error" style="display: none;">
+                    <h1>Error occured</h1>
+                    <p>An error occured, if this keeps happening please inform us providing the following details:</p>
+                    <span id="footer_error_message" class="bad"></span>
+                    <pre id="footer_error_details"></pre>
+                </div>
             </section>
-            <section>
-                <form id="userdetail" name="userdetail" onsubmit="return userdetailSubmit()">
-                    <label><span>Planetside Player Lookup Tool</span><input type="text" name="username" id="username" pattern="[a-zA-Z0-9]+" minlength="3" maxlength="32" required /></label>
-                    <button id="userdetail-submit" type="submit" disabled>Submit</button>
-                </form>
+            <section class="tab-container">
+                <article>
+                    <form id="userdetail" name="userdetail" onsubmit="return userdetailSubmit()">
+                        <label><input type="text" name="username" id="username" pattern="[a-zA-Z0-9]+" minlength="3" maxlength="32" required /></label>
+                        <button id="userdetail-submit" type="submit" disabled>Submit</button>
+                    </form>
+                    <div id="userdetail_results" style="display: none;">
+                        <h2>Planetside Player Lookup</h2>
+                        <ul class="float">
+                            <li>Name: <span id="userdetail-name"></span></li>
+                            <li>Rank: <span id="userdetail-rank"></span></li>
+                            <li>Total Time Played: <span id="userdetail-totaltime"></span></li>
+                            <li>Online: <span id="userdetail-online"></span></li>
+                            <li>Creation: <span id="userdetail-creation"></span></li>
+                            <li>Account Age: <span id="userdetail-accountage"></span></li>
+                            <li>Last Login: <span id="userdetail-lastlogon"></span></li>
+                            <li>Last Save: <span id="userdetail-lastsave"></span></li>
+                            <li>Total Items: <span id="userdetail-totalitems"></span></li>
+                            <li>Spent Certs: <span id="userdetail-spentcerts"></span></li>
+                            <li>Total Axil Points: <span id="userdetail-axilpoints"></span></li>
+                        </ul>
+                        <h2>EDIM Loadout Check</h2>
+                        <div id="userdetail_loadout"></div>
+                    </div>
+                </article>
+                <article>
+                    <form id="memberlist" name="memberlist" onsubmit="return memberlistSubmit()">
+                        <label><input type="text" name="outfitalias" id="outfitalias" pattern="[a-zA-Z0-9]+" minlength="1" maxlength="4" required value="EDIM" /></label>
+                        <button id="memberlist-submit" type="submit" disabled>Submit</button>
+                    </form>
+                    <div id="memberlist_results" style="display: none;">
+                        <h2>Planetside Outfit Lookup</h2>
+                        <ul class="float">
+                            <li>Name: <span id="outfit-name"></span></li>
+                            <li>Created: <span id="outfit-created"></span></li>
+                            <li>Axil Points: <span id="outfit-axilpoints"></span></li>
+                        </ul>
+                        <h2>Ranks</h2>
+                        <p class="mobile" style="display: none;">Landscape for more columns</p>
+                        <table class="rank-table">
+                            <thead>
+                                <tr>
+                                    <th id="ranksort0" onclick="sort(this)">Name</th>
+                                    <th onclick="sort(this)">Members</th>
+                                    <th onclick="sort(this)">Active Now</th>
+                                    <th onclick="sort(this)">Active Today</th>
+                                    <th onclick="sort(this)">Active Week</th>
+                                    <th onclick="sort(this)">Active Month</th>
+                                    <th onclick="sort(this)">Total Battle Rank</th>
+                                    <th onclick="sort(this)">Total Prestige</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rank-tbody">
+                
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th>Total</th>
+                                    <th><span id="outfit-members"></span></th>
+                                    <th><span id="outfit-active-now"></span></th>
+                                    <th><span id="outfit-active-today"></span></th>
+                                    <th><span id="outfit-active-week"></span></th>
+                                    <th><span id="outfit-active-month"></span></th>
+                                    <th><span id="outfit-total-battlerank"></span></th>
+                                    <th><span id="outfit-total-prestige"></span></th>
+                                </tr>
+                                <tr>
+                                    <th>Average</th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th><span id="outfit-average-battlerank"></span></th>
+                                    <th><span id="outfit-average-prestige"></span></th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                        <h2>Members</h2>
+                        <p class="mobile" style="display: none;">Landscape for more columns</p>
+                        <table class="member-table">
+                            <thead>
+                                <tr>
+                                    <th onclick="sort(this)">Name</th>
+                                    <th onclick="sort(this)">Battle Rank (Prestige)</th>
+                                    <th id="membersort2" onclick="sort(this)">Outfit Rank</th>
+                                    <th onclick="sort(this)">Axil Points</th>
+                                    <th id="membersort4" onclick="sort(this)">Member Since</th>
+                                    <th onclick="sort(this)">Last Online</th>
+                                </tr>
+                            </thead>
+                            <tbody id="member-tbody">
+                
+                            </tbody>
+                        </table>
+                    </div>
+                </article>
+                <article>
+                    <form id="monitorform" name="monitorform" onsubmit="return monitorformSubmit()">
+                        <fieldset>
+                            <legend>Server Notification</legend>
+                            <label><span>Server</span><input type="text" name="username" id="username" pattern="[a-zA-Z0-9]+" minlength="3" maxlength="32" required /></label>
+
+
+                        </fieldset>
+                        <fieldset>
+                            <legend>Player Notification</legend>
+                            <label><span>User</span><input type="text" name="username" id="username" pattern="[a-zA-Z0-9]+" minlength="3" maxlength="32" required /></label>
+                        </fieldset>
+                        <fieldset>
+                            <legend>Outfit Notification</legend>
+                            <label><span>Outfit</span><input type="text" name="outfitalias" pattern="[a-zA-Z0-9]+" minlength="1" maxlength="4" required value="EDIM" /></label>
+                            <label><span>Axil Point</span><input type="checkbox" name="foo" value="" /></label>
+                            <label><span>Crown</span><input type="checkbox" name="foo" value="" /></label>
+                        </fieldset>
+                        <button id="memberlist-submit" type="submit" disabled>Submit</button>
+                    </form>
+                    <div>
+                        
+                    </div>
+                    <div>
+                        
+                    </div>
+                </article>
             </section>
-        </section>
-        <footer id="footer" style="display: none;">
-            <span id="footer_information" style="display: none;"></span>
-            <div id="footer_loading" style="display: none;" class="loading">
-                <span id="footer_loading_progress"></span>
-            </div>
-            <div id="footer_warning" style="display: none;">
-                <span id="footer_warning_message" class="avg"></span>
-            </div>
-            <div id="footer_error" style="display: none;">
-                <h1>Error occured</h1>
-                <p>An error occured, if this keeps happening please inform us providing the following details:</p>
-                <span id="footer_error_message" class="bad"></span>
-                <pre id="footer_error_details"></pre>
-            </div>
-            <div id="userdetail_results" style="display: none;">
-                <h2>Planetside Player Lookup</h2>
-                <ul class="float">
-                    <li>Name: <span id="userdetail-name"></span></li>
-                    <li>Rank: <span id="userdetail-rank"></span></li>
-                    <li>Total Time Played: <span id="userdetail-totaltime"></span></li>
-                    <li>Online: <span id="userdetail-online"></span></li>
-                    <li>Creation: <span id="userdetail-creation"></span></li>
-                    <li>Account Age: <span id="userdetail-accountage"></span></li>
-                    <li>Last Login: <span id="userdetail-lastlogon"></span></li>
-                    <li>Last Save: <span id="userdetail-lastsave"></span></li>
-                    <li>Total Items: <span id="userdetail-totalitems"></span></li>
-                    <li>Spent Certs: <span id="userdetail-spentcerts"></span></li>
-                    <li>Total Axil Points: <span id="userdetail-axilpoints"></span></li>
-                </ul>
-                <h2>EDIM Loadout Check</h2>
-                <div id="userdetail_loadout"></div>
-            </div>
-            <div id="memberlist_results" style="display: none;">
-                <h2>Planetside Outfit Lookup</h2>
-                <ul class="float">
-                    <li>Name: <span id="outfit-name"></span></li>
-                    <li>Created: <span id="outfit-created"></span></li>
-                    <li>Axil Points: <span id="outfit-axilpoints"></span></li>
-                </ul>
-                <h2>Ranks</h2>
-                <p class="mobile" style="display: none;">Landscape for more columns</p>
-                <table class="rank-table">
-                    <thead>
-                        <tr>
-                            <th id="ranksort0" onclick="sort(this)">Name</th>
-                            <th onclick="sort(this)">Members</th>
-                            <th onclick="sort(this)">Active Now</th>
-                            <th onclick="sort(this)">Active Today</th>
-                            <th onclick="sort(this)">Active Week</th>
-                            <th onclick="sort(this)">Active Month</th>
-                            <th onclick="sort(this)">Total Battle Rank</th>
-                            <th onclick="sort(this)">Total Prestige</th>
-                        </tr>
-                    </thead>
-                    <tbody id="rank-tbody">
-        
-                    </tbody>
-                    <tfoot>
-                        <tr>
-                            <th>Total</th>
-                            <th><span id="outfit-members"></span></th>
-                            <th><span id="outfit-active-now"></span></th>
-                            <th><span id="outfit-active-today"></span></th>
-                            <th><span id="outfit-active-week"></span></th>
-                            <th><span id="outfit-active-month"></span></th>
-                            <th><span id="outfit-total-battlerank"></span></th>
-                            <th><span id="outfit-total-prestige"></span></th>
-                        </tr>
-                        <tr>
-                            <th>Average</th>
-                            <th></th>
-                            <th></th>
-                            <th></th>
-                            <th></th>
-                            <th></th>
-                            <th><span id="outfit-average-battlerank"></span></th>
-                            <th><span id="outfit-average-prestige"></span></th>
-                        </tr>
-                    </tfoot>
-                </table>
-                <h2>Members</h2>
-                <p class="mobile" style="display: none;">Landscape for more columns</p>
-                <table class="member-table">
-                    <thead>
-                        <tr>
-                            <th onclick="sort(this)">Name</th>
-                            <th onclick="sort(this)">Battle Rank (Prestige)</th>
-                            <th id="membersort2" onclick="sort(this)">Outfit Rank</th>
-                            <th onclick="sort(this)">Axil Points</th>
-                            <th id="membersort4" onclick="sort(this)">Member Since</th>
-                            <th onclick="sort(this)">Last Online</th>
-                        </tr>
-                    </thead>
-                    <tbody id="member-tbody">
-        
-                    </tbody>
-                </table>
-            </div>
         </footer>
     </main>
     <script src="modules/particles.js" async defer></script>

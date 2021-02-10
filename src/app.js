@@ -173,16 +173,16 @@ function loadParticles() {
 	var fps = 60;
 
 	window.requestAnimationFrame = window.requestAnimationFrame ||
-		window.mozRequestAnimationFrame    ||
-		window.oRequestAnimationFrame      ||
+		window.mozRequestAnimationFrame ||
+		window.oRequestAnimationFrame ||
 		window.msRequestAnimationFrame;
-	
+
 	window.cancelAnimationFrame = window.cancelAnimationFrame ||
 		window.webkitCancelRequestAnimationFrame ||
-		window.mozCancelRequestAnimationFrame    ||
-		window.oCancelRequestAnimationFrame      ||
+		window.mozCancelRequestAnimationFrame ||
+		window.oCancelRequestAnimationFrame ||
 		window.msCancelRequestAnimationFrame;
-	
+
 	window.requestAnimFrame = function (cb) {
 		cb.timeoutHandle = setTimeout(function () {
 			if (window.requestAnimationFrame) {
@@ -192,14 +192,14 @@ function loadParticles() {
 			}
 		}, 1000 / fps);
 	}
-	
+
 	window.cancelRequestAnimFrame = function (cb) {
 		if (cb.timeoutHandle) {
 			clearTimeout(cb.timeoutHandle);
 		}
 		window.cancelAnimationFrame(cb);
 	}
-	
+
 	particlesJS('particles-js', JSON.parse(config.particles));
 }
 /**
@@ -858,7 +858,7 @@ function renderUserDetail(data, err) {
 		$('userdetail-rank').innerText = character.battle_rank.value + '.' + character.battle_rank.percent_to_next;
 		$('userdetail-totaltime').innerText = formatTimeFromMins(character.times.minutes_played);
 		$('userdetail-creation').innerText = character.times.creation_date;
-		$('userdetail-accountage').innerText = formatTimeFromMins((Date.now() - Number(character.times.creation*1000))/60000);
+		$('userdetail-accountage').innerText = formatTimeFromMins((Date.now() - Number(character.times.creation * 1000)) / 60000);
 		$('userdetail-lastlogon').innerText = character.times.last_login_date;
 		$('userdetail-lastsave').innerText = character.times.last_save_date;
 		$('userdetail-totalitems').innerText = character.items.length;
@@ -1041,6 +1041,106 @@ function sort(e, forceDirection) {
 			// new, existing
 		}
 	}
+}
+
+function humanPhrase(input) {
+	var options = [
+		/Notify me when a player called ([a-zA-Z0-9]{3,32}) dies to the player called ([a-zA-Z0-9]{3,32})./,
+		/Notify me when a player called ([a-zA-Z0-9]{3,32}) dies to the outfit ([A-Z]+)\./,
+		/Notify me when a player called ([a-zA-Z0-9]{3,32}) dies to the outfit ([A-Z]+), with a rank equal to and above ([a-zA-Z0-9]{3,32})\./,
+		/Notify me when a player called ([a-zA-Z0-9]{3,32}) kills the player called ([a-zA-Z0-9]{3,32})\./
+	]
+
+	// https://github.com/aaditmshah/lexer
+
+	var options2 = [
+		[
+			'Notify me when a player called ', /([a-zA-Z0-9]{3,32})/, [
+				[ 'dies to the player called ', /([a-zA-Z0-9]{3,32})/, '.', '$1' ],
+				[ 'dies to the outfit called ', /([a-zA-Z0-9]{1,4})/, '.', '$2' ],
+				[ 'dies to the outfit called ', /([a-zA-Z0-9]{1,4})/, ', with a rank equal to and above', /[a-zA-Z0-9]{3,32}/, '.', '$3' ],
+				[ 'kills the player called ', /([a-zA-Z0-9]{3,32})/, '.', '$4' ]
+			]
+		]
+	]
+	
+	var options3 = [
+		[
+			'Notify me when a player called ', /([a-zA-Z0-9]{3,32})/, [
+				[
+					'dies to the ',
+					[ 'player called ', /([a-zA-Z0-9]{3,32})/, '.', '$1' ],
+					[ 'outfit called ', /([a-zA-Z0-9]{1,4})/, '.', '$2' ],
+					[ 'outfit called ', /([a-zA-Z0-9]{1,4})/, ', with a rank equal to and above', /([a-zA-Z0-9]{3,32})/, '.', '$3' ],
+				],
+				[ 'kills the player called ', /([a-zA-Z0-9]{3,32})/, '.', '$4' ]
+			]
+		]
+	]
+	
+
+}
+
+function listenPs2Events() {
+
+	var server = new WebSocket('wss://push.planetside2.com/streaming?environment=ps2&service-id=s:example');
+
+	server.onmessage = function (ev) {
+		var data = JSON.parse(ev.data);
+
+		if (!data.service || data.service != 'event') {
+			return;
+		}
+
+		// data.type == 'heartbeat' && data.online
+		// data.type == 'serviceStateChanged'
+		
+		if (!data.type || data.type != 'serviceMessage') {
+			return;
+		}
+		
+		if (!data.payload || !data.payload.event_name) {
+			return;
+		}
+		
+		if (data.payload.event_name == 'Death') {
+			
+		} else if (data.payload.event_name == 'MetagameEvent') {
+			
+		} else if (data.payload.event_name == 'FacilityControl') {
+			if (data.payload.new_faction_id == data.payload.old_faction_id) {
+				// PlayerFacilityDefend
+				return;
+			}
+
+			if (data.payload.facility_id == '6200' && data.payload.outfit_id == '37511594860086186') {
+				// EDIM captured the Crown
+
+			}
+		}
+	}
+
+	server.onopen = function () {
+		server.send(JSON.stringify({
+			"service": "event",
+			"action": "subscribe",
+			"worlds": ["10"],
+			"eventNames": ["FacilityControl", "MetagameEvent"]
+		}));
+
+		server.send(JSON.stringify({
+			"service": "event",
+			"action": "subscribe",
+			"characters": ["5428059164954198113"],
+			"eventNames": ["Death"]
+		}));
+	}
+
+	server.onerror = function (err) {
+
+	}
+
+	return server;
 }
 
 this.addEventListener('load', app);

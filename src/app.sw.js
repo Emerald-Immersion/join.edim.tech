@@ -1,4 +1,4 @@
-var version = 'v14::';
+var version = 'v15::';
 
 self.addEventListener("install", function (event) {
 	console.log('WORKER: install event in progress.');
@@ -135,3 +135,43 @@ self.addEventListener("activate", function (event) {
 		})
 	);
 });
+
+/*
+self.addEventListener('message', function (event) {
+	event.waitUntil(async function () {
+		var data = JSON.parse(event.data);
+
+		
+
+		var perm = await self.Notification.requestPermission();
+
+		if (perm == 'denied') {
+			event.source.postMessage(JSON.stringify({ 
+				type: 'notification',
+				sub: 'permission',
+				message: perm
+			}));
+			return;
+		}
+		
+		
+	});
+});
+
+self.addEventListener('notificationclick', function (event) {
+	event.waitUntil(
+		self.clients.matchAll().then(function (clients) {
+			if(clients.length){
+				clients[0].focus();
+				clients[0].postMessage(JSON.stringify({ 
+					type: 'notification',
+					sub: 'click',
+					message: event.type
+				}));
+			} else {
+				self.clients.openWindow('/');
+			}
+		})
+	);
+});
+*/

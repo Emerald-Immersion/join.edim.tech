@@ -413,3 +413,36 @@ table thead th:hover {
 :root {
     color-scheme: dark;
 }
+
+/* Tabs */
+.tabs > input, .tabs > .tab-container > article {
+    display: none;
+    padding: 20px;
+}
+.tabs > nav {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    align-content: center;
+    border: solid #00A9A3;
+    border-width: 0 0 1px 0 ;
+}
+.tabs > nav label {
+    padding: 10px;
+    margin: 5px 5px 0 5px;
+    cursor: pointer;
+}
+
+.tabs > input:nth-child(1):checked ~ .tab-container > article:nth-child(1),
+.tabs > input:nth-child(2):checked ~ .tab-container > article:nth-child(2),
+.tabs > input:nth-child(3):checked ~ .tab-container > article:nth-child(3) {
+    display: block !important;
+}
+.tabs > input:nth-child(1):checked ~ nav > label:nth-child(1),
+.tabs > input:nth-child(2):checked ~ nav > label:nth-child(2),
+.tabs > input:nth-child(3):checked ~ nav > label:nth-child(3) {
+    border: solid #00A9A3;
+    border-width: 1px 1px 0 1px;
+    border-radius: 15px 15px 0 0;
+    padding: 9px;
+}
