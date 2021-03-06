@@ -44,6 +44,11 @@ function $$$(url, callback, timeout) {
 		callback(null, err);
 	}
 }
+function ForEachObject(array, callback) {
+	var i = 0;
+
+	callback()
+}
 /**
  * Entry Point
  */
@@ -704,6 +709,20 @@ function renderMemberList(data, err) {
 		// TODO: Use existing rows
 		memberResults.innerHTML = '';
 
+		outfit_list.members.sort(function (a, b) {
+			if (a.rank_ordinal > b.rank_ordinal) {
+				return 1;
+			} else if (a.rank_ordinal < b.rank_ordinal) {
+				return -1;
+			} else if (a.member_since > b.member_since) {
+				return 1;
+			} else if (a.member_since < b.member_since) {
+				return -1;
+			} else {
+				return 0;
+			}
+		})
+
 		for (var i = 0; i < outfit_list.members.length; i++) {
 			var member = outfit_list.members[i];
 
@@ -746,6 +765,7 @@ function renderMemberList(data, err) {
 			tr.appendChild(td);
 
 			td = document.createElement('td');
+			
 			if (member.rank) {
 				td.innerText = member.rank;
 				td.dataset.value = member.rank_ordinal;
@@ -775,10 +795,9 @@ function renderMemberList(data, err) {
 			memberResults.appendChild(tr);
 		}
 
-		sort($('ranksort0'));
-
-		sort($('membersort4'));
-		sort($('membersort2'));
+		sort($('ranksort0'), null, function () {
+			sort($('membersort2'));
+		});
 
 		$('memberlist_results').style.display = '';
 		showData();
@@ -788,6 +807,11 @@ function renderMemberList(data, err) {
 				behavior: 'smooth'
 			});
 		}
+
+		sort($('membersort4'), null, function () {
+			sort($('membersort2'));
+			
+		});
 	} catch (e) {
 		showError(e);
 	}
@@ -959,12 +983,16 @@ function renderUserDetail(data, err) {
  * @param {HTMLElement} e th or td element
  * @param {bool} forceDirection 1 for ascending, -1 for descending (default)
  */
-function sort(e, forceDirection) {
+function sort(e, forceDirection, callBack) {
 	var col = Array.prototype.indexOf.call(e.parentNode.children, e);
 
 	var table = e.parentElement.parentElement.parentElement;
 
 	if (table.tagName != 'TABLE') {
+		return;
+	}
+
+	if (table.classList.contains('loading')) {
 		return;
 	}
 
@@ -998,49 +1026,69 @@ function sort(e, forceDirection) {
 
 	var numeric = !isNaN(rows[0].children[col].innerText);
 
-	for (var i = 0; i < rows.length; i++) {
-		var row = rows[i];
-		var cell = row.children[col];
-		var last = row;
+	var i = 0;
 
-		if (alreadySorted) {
-			if (i < rows.length - 1) {
-				row = rows[0];
-				last = rows[rows.length - i];
-			}
-		} else {
-			for (var c = i - 1; c >= 0; c--) {
-				var compare = rows[c];
-				var compareCell = compare.children[col];
-				var ret = 0;
+	var next = function () {
+		var limit = Math.min(i + 5, rows.length);
 
-				if (cell.dataset.value) {
-					if (Number(cell.dataset.value) < Number(compareCell.dataset.value)) {
-						ret = direction;
-					}
-				} else {
-					if (numeric) {
-						if (Number(cell.innerText) < Number(compareCell.innerText)) {
+		for (; i < limit; i++) {
+			var row = rows[i];
+			var cell = row.children[col];
+			var last = row;
+
+			if (alreadySorted) {
+				if (i < rows.length - 1) {
+					row = rows[0];
+					last = rows[rows.length - i];
+				}
+			} else {
+				for (var c = i - 1; c >= 0; c--) {
+					var compare = rows[c];
+					var compareCell = compare.children[col];
+					var ret = 0;
+
+					if (cell.dataset.value) {
+						if (Number(cell.dataset.value) < Number(compareCell.dataset.value)) {
 							ret = direction;
 						}
 					} else {
-						ret = cell.innerText.localeCompare(compareCell.innerText);
+						if (numeric) {
+							if (Number(cell.innerText) < Number(compareCell.innerText)) {
+								ret = direction;
+							}
+						} else {
+							ret = cell.innerText.localeCompare(compareCell.innerText);
+						}
+					}
+
+					if (ret == direction) {
+						last = compare;
+					} else {
+						break;
 					}
 				}
+			}
 
-				if (ret == direction) {
-					last = compare;
-				} else {
-					break;
-				}
+			if (row != last) {
+				tbody.insertBefore(row, last);
+				// new, existing
 			}
 		}
 
-		if (row != last) {
-			tbody.insertBefore(row, last);
-			// new, existing
+		if (i < rows.length) {
+			window.requestAnimationFrame(next);
+		} else {
+			table.classList.remove('loading');
+
+			if (callBack) {
+				callBack();
+			}
 		}
 	}
+
+	table.classList.add('loading');
+
+	next();
 }
 
 function humanPhrase(input) {
