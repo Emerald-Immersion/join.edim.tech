@@ -741,7 +741,7 @@ function renderMemberList(data, err) {
 			td = document.createElement('td');
 			if (member.battle_rank && member.battle_rank.value && member.prestige_level) {
 				td.innerText = member.battle_rank.value + ' (' + member.prestige_level + ')';
-				td.dataset.value = Number(member.battle_rank.value) + (Number(member.prestige_level) * 1000);
+				td.dataset.value = String(Number(member.battle_rank.value) + (Number(member.prestige_level) * 1000));
 			}
 			tr.appendChild(td);
 
@@ -863,7 +863,7 @@ function renderUserDetail(data, err) {
 		$('userdetail-lastsave').innerText = character.times.last_save_date;
 		$('userdetail-totalitems').innerText = character.items.length;
 		$('userdetail-spentcerts').innerText = character.certs.spent_points;
-		$('userdetail-axilpoints').innerText = calcAxilPoints([character.character_id]);
+		$('userdetail-axilpoints').innerText = String(calcAxilPoints([character.character_id]));
 
 		if (character.online_status > 0) {
 			$('userdetail-online').innerText = 'Yes';
@@ -957,7 +957,7 @@ function renderUserDetail(data, err) {
 /**
  * @description Sorts a HTML table tbody elements based on a column.
  * @param {HTMLElement} e th or td element
- * @param {bool} forceDirection 1 for ascending, -1 for descending (default)
+ * @param {Number} forceDirection 1 for ascending, -1 for descending (default)
  */
 function sort(e, forceDirection) {
 	var col = Array.prototype.indexOf.call(e.parentNode.children, e);

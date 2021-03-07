@@ -39,6 +39,12 @@ main > section {
     max-width: 320px;
     flex: 1 1 25%;
     box-sizing: border-box;
+    
+    display: flex;
+    flex-direction: column;
+    align-content: center;
+    justify-content: center;
+    align-items: center;
 }
 
 @media screen and (max-width: 420px) {
