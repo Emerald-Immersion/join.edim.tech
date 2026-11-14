@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>[EDIM] Emerald Immersion</title>
+    <meta name="description" content="EDIM Join Website for Teamspeak/Discord Urls, Outfit Stats and helpful utilities." />
+    <meta name="keywords" content="Emerald Immersion, EDIM, PlanetSide Outfit" />
+    <meta name="author" content="EDIM" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="icon" href="media/EDIM_512.png" />  
+    <meta name="theme-color" content="#1c262f" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="msapplication-TileColor" content="#1c262f" />
+    <meta name="msapplication-TileImage" content="media/EDIM_512.png" />
+    <meta name="msapplication-navbutton-color" content="#1c262f">
+    <meta name="apple-mobile-web-app-status-bar-style" content="#1c262f">
+    <link rel="stylesheet" media="screen" href="style.css" />
+</head>
+<body>
+    <noscript>
+        <div class="strip error">This site works best with JavaScript enabled, links to TeamSpeak and Discord do work without.</div>
+    </noscript>
+    <!--[if IE ]><div class="strip error">You are using an very outdated browser: <a href="https://www.updatemybrowser.org/">https://www.updatemybrowser.org/</a></div><![endif]-->
+    <div id="strip-ie" class="strip warning ie" style="display: none;">You are using an outdated browser: <a href="https://www.updatemybrowser.org/">https://www.updatemybrowser.org/</a></div>
+    <div id="strip-error" class="strip error" style="display: none;"></div>
+    <div id="particles-js"></div>
+    <main>
+        <header>
+            <img src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="media/EDIM_512.png" width="256" height="256" alt="" />
+            <h1>[EDIM] Emerald Immersion</h1>
+        </header>
+        <section>
+            <a href="ts3server://ts.edim.tech">
+                <img src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="media/teamspeak.png" width="200" height="60.172" alt="" />
+                <br />
+                <p>Join us on Teamspeak for Organised Voice Comms.</p>
+                <br />
+                <span class="button">Join ts.edim.tech</span>
+            </a>
+            <br />
+            <a href="ts3server://ts.edim.tech?addbookmark=Emerald%20Immersion">
+                <span class="button">Add TS3 Bookmark</span>
+            </a>
+        </section>
+        <section>
+            <img src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="media/planetside.png" width="200" height="34" alt="" />
+            <br />
+            <div id="planetside-result" class="loading">
+                <div><b>Online Members: <span id="ActiveMembersNow"></span></b></div>
+                <div>Active Leaders: <span id="ActiveLeaders"></span></div>
+                <div>Active Members Today: <span id="ActiveMembersToday"></span></div>
+                <div>Active Members this Week: <span id="ActiveMembersWeek"></span></div>
+                <div>Active Members this Month: <span id="ActiveMembersMonth"></span></div>
+                <div>Total Members: <span id="TotalMembers"></span></div>
+                <div>Total Prestige: <span id="TotalPrestige"></span></div>
+                <div>Total Battle Rank: <span id="TotalBattleRank"></span></div>
+                <div>Average Battle Rank: <span id="AvgBattleRank"></span></div>
+                <div>Total Axil Points: <span id="TotalAxilPoints"></span></div>
+            </div>
+        </section>
+        <section>
+            <a target="_blank" href="https://discordapp.com/invite/HWz3jcM">
+                <img src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="media/discord.svg" width="278" height="94.547" alt="" />
+                <br />
+                <p>Join us on Discord for Chat.</p>
+                <br />
+                <span class="button">Join Discord</span>
+            </a>
+        </section>
+        <section class="split">
+            <section>
+                <form id="memberlist" name="memberlist" onsubmit="return memberlistSubmit()">
+                    <label><span>Planetside Outfit Lookup Tool</span><input type="text" name="outfitalias" id="outfitalias" pattern="[a-zA-Z0-9]+" minlength="1" maxlength="4" required value="EDIM" /></label>
+                    <button id="memberlist-submit" type="submit" disabled>Submit</button>
+                </form>
+            </section>
+            <section>
+                <form id="userdetail" name="userdetail" onsubmit="return userdetailSubmit()">
+                    <label><span>Planetside Player Lookup Tool</span><input type="text" name="username" id="username" pattern="[a-zA-Z0-9]+" minlength="3" maxlength="32" required /></label>
+                    <button id="userdetail-submit" type="submit" disabled>Submit</button>
+                </form>
+            </section>
+        </section>
+        <footer id="footer" style="display: none;">
+            <span id="footer_information" style="display: none;"></span>
+            <div id="footer_loading" style="display: none;" class="loading">
+                <span id="footer_loading_progress"></span>
+            </div>
+            <div id="footer_warning" style="display: none;">
+                <span id="footer_warning_message" class="avg"></span>
+            </div>
+            <div id="footer_error" style="display: none;">
+                <h1>Error occured</h1>
+                <p>An error occured, if this keeps happening please inform us providing the following details:</p>
+                <span id="footer_error_message" class="bad"></span>
+                <pre id="footer_error_details"></pre>
+            </div>
+            <div id="userdetail_results" style="display: none;">
+                <h2>Planetside Player Lookup</h2>
+                <ul class="float">
+                    <li>Name: <span id="userdetail-name"></span></li>
+                    <li>Rank: <span id="userdetail-rank"></span></li>
+                    <li>Total Time Played: <span id="userdetail-totaltime"></span></li>
+                    <li>Online: <span id="userdetail-online"></span></li>
+                    <li>Creation: <span id="userdetail-creation"></span></li>
+                    <li>Account Age: <span id="userdetail-accountage"></span></li>
+                    <li>Last Login: <span id="userdetail-lastlogon"></span></li>
+                    <li>Last Save: <span id="userdetail-lastsave"></span></li>
+                    <li>Total Items: <span id="userdetail-totalitems"></span></li>
+                    <li>Spent Certs: <span id="userdetail-spentcerts"></span></li>
+                    <li>Total Axil Points: <span id="userdetail-axilpoints"></span></li>
+                </ul>
+                <h2>EDIM Loadout Check</h2>
+                <div id="userdetail_loadout"></div>
+            </div>
+            <div id="memberlist_results" style="display: none;">
+                <h2>Planetside Outfit Lookup</h2>
+                <ul class="float">
+                    <li>Name: <span id="outfit-name"></span></li>
+                    <li>Created: <span id="outfit-created"></span></li>
+                    <li>Axil Points: <span id="outfit-axilpoints"></span></li>
+                </ul>
+                <h2>Ranks</h2>
+                <p class="mobile" style="display: none;">Landscape for more columns</p>
+                <table class="rank-table">
+                    <thead>
+                        <tr>
+                            <th id="ranksort0" onclick="sort(this)">Name</th>
+                            <th onclick="sort(this)">Members</th>
+                            <th onclick="sort(this)">Active Now</th>
+                            <th onclick="sort(this)">Active Today</th>
+                            <th onclick="sort(this)">Active Week</th>
+                            <th onclick="sort(this)">Active Month</th>
+                            <th onclick="sort(this)">Total Battle Rank</th>
+                            <th onclick="sort(this)">Total Prestige</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rank-tbody">
+        
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th>Total</th>
+                            <th><span id="outfit-members"></span></th>
+                            <th><span id="outfit-active-now"></span></th>
+                            <th><span id="outfit-active-today"></span></th>
+                            <th><span id="outfit-active-week"></span></th>
+                            <th><span id="outfit-active-month"></span></th>
+                            <th><span id="outfit-total-battlerank"></span></th>
+                            <th><span id="outfit-total-prestige"></span></th>
+                        </tr>
+                        <tr>
+                            <th>Average</th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th><span id="outfit-average-battlerank"></span></th>
+                            <th><span id="outfit-average-prestige"></span></th>
+                        </tr>
+                    </tfoot>
+                </table>
+                <h2>Members</h2>
+                <p class="mobile" style="display: none;">Landscape for more columns</p>
+                <table class="member-table">
+                    <thead>
+                        <tr>
+                            <th onclick="sort(this)">Name</th>
+                            <th onclick="sort(this)">Battle Rank (Prestige)</th>
+                            <th id="membersort2" onclick="sort(this)">Outfit Rank</th>
+                            <th onclick="sort(this)">Axil Points</th>
+                            <th id="membersort4" onclick="sort(this)">Member Since</th>
+                            <th onclick="sort(this)">Last Online</th>
+                        </tr>
+                    </thead>
+                    <tbody id="member-tbody">
+        
+                    </tbody>
+                </table>
+            </div>
+        </footer>
+    </main>
+    <script src="modules/particles.js" async defer></script>
+    <script src="config.js" defer></script>
+    <script src="app.js" async defer></script>
+</body>
+</html>

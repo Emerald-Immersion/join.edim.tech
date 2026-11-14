@@ -1,0 +1,35 @@
+{
+	"short_name": "EDIM",
+	"name": "Emerald Immersion",
+	"description": "EDIM Join Website for Teamspeak/Discord Urls, Outfit Stats and helpful utilities.",
+	"start_url": ".",
+	"display": "standalone",
+	"background_color": "#1c262f",
+	"theme_color": "#1c262f",
+	"icons": [{
+		"src": "media/EDIM_512.png",
+		"sizes": "72x72",
+		"type": "image/png"
+	}, {
+		"src": "media/EDIM_512.png",
+		"sizes": "96x96",
+		"type": "image/png"
+	}, {
+		"src": "media/EDIM_512.png",
+		"sizes": "144x144",
+		"type": "image/png"
+	}, {
+		"src": "media/EDIM_512.png",
+		"sizes": "168x168",
+		"type": "image/png"
+	}, {
+		"src": "media/EDIM_512.png",
+		"sizes": "192x192",
+		"type": "image/png"
+	}, {
+		"src": "media/EDIM_512.png",
+		"sizes": "512x512",
+		"type": "image/png"
+	}],
+	"shortcuts":[]
+}
